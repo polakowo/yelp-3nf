@@ -6,6 +6,8 @@ The aim of this project is to create a relational DWH for storing and querying Y
 
 For this, we will build a data pipeline that translates the non-relational Yelp dataset distributed over JSON files in Amazon S3 bucket, into a 3NF-normalized dataset stored on Amazon Redshift. This dataset will be a source of truth for further dimensional tables. Additionally, we will enrich the data with demographics and weather data coming from third-party data sources. The entire process will be done using Apache Spark and Amazon Redshift. 
 
+<img width=500 src="images/architecture.png"/>
+
 The designed Amazon Redshift data warehouse follows the [Inmon's Corporate Information Factory (CIF)](https://www.techopedia.com/definition/28024/corporate-information-factory-cif) architecture: it builds upon the centralized corporate data repository (top-down design) which is 3NF normalized. This repository is our target artifact and is designed as a single integrated source of truth. Dimensional data marts can be then created from the DWH based on end user needs. This architecture ensures data integrity and consistency; it also brings the advantage of coordinating data marts through the same ETL processes.
 
 As a result, the end user can either create data marts on top of the designed central repository, design a set of dimensional tables for their analytics team to find valuable insights, or use BI and visualization tools such as Tableau to access the data on Redshift. We will create a sample star schema to demonstrate the power of the newly designed data model.
