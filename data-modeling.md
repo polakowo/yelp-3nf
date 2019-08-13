@@ -1,5 +1,5 @@
-# Data Model
+# Data Modeling
 
-In the following you will find the data model of the source-of-truth database.
+The data model is a 3NF-normalized version of the NoSQL database provided by Yelp and augmented with demographics and weather data. The designed data warehouse follows the [Inmon's Corporate Information Factory (CIF)](https://www.techopedia.com/definition/28024/corporate-information-factory-cif) architecture: it builds upon the centralized corporate data repository (top-down design) which is 3NF normalized. This repository is our target artifact and is designed as a single integrated source of truth for data marts. Dimensional data marts can be then created from the DWH based on end user needs. This architecture ensures data integrity and consistency. It also brings the advantage of coordinating data marts through the same ETL processes. In the following image you will find the logical data model of the normalized source-of-truth database. 
 
 ![Data Model](data-model.jpg)
