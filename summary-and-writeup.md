@@ -1,4 +1,8 @@
 #### Project Summary
+
+#### Scope 
+Explain what you plan to do in the project in more detail. What data do you use? What is your end solution look like? What tools did you use? Explain what end use cases you'd like to prepare the data for (e.g., analytics table, app back-end, source-of-truth database, etc.)
+
 --describe your project at a high level--
 
 The project follows the follow steps:
