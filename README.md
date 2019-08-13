@@ -77,7 +77,7 @@ All three datasets will reside in a Amazon S3 bucket, which is the easiest and s
 
 Since the data is in JSON format and contains arrays and nested fields, it needs first to be transformed into a relational form. By design, Amazon Redshift does not support loading nested data (only Redshift Spectrum enables you to query complex data types such as struct, array, or map, without having to transform or load your data). To do this in a quick and scalable fashion, we will utilize Apache Spark. In particular, we will run an Amazon EMR (Elastic MapReduce) cluster, which uses Apache Spark and Hadoop to quickly & cost-effectively process and analyze vast amounts of data. The another advantage of Spark is the ability to control data quality, thus most of our tests will be done at this stage. With Spark, we will dynamically load JSON files from S3, process them, and store their normalized and enriched versions back into S3 in Parquet format.
 
-To configure Amazon EMR to run a PySpark job using Python 3.6, follow [these instructions].(https://aws.amazon.com/premiumsupport/knowledge-center/emr-pyspark-python-3x/)
+To configure Amazon EMR to run a PySpark job using Python 3.6, follow [these instructions](https://aws.amazon.com/premiumsupport/knowledge-center/emr-pyspark-python-3x/).
 
 <img width=100 src="images/amazon-s3-logo.png"/>
 
