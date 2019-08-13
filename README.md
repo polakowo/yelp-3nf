@@ -1,6 +1,6 @@
-# Project Summary
+# yelp-3nf
 
-## Introduction
+## Summary
 
 The aim of this project is to create a relational DWH for storing and querying Yelp data. 
 
@@ -91,9 +91,11 @@ To load the data from Parquet files into our Redshift DWH, we can rely on multip
 
 ## Data model
 
-In the following image you will find the logical data model of the normalized source-of-truth database. 
+The following image depicts the 3NF-normalized data model:
 
 ![Data Model](images/data-model.jpg)
+
+Note: fields such as *compliment_&ast;* are just placeholders for multiple fields with the same prefix (*compliment*). This is done to visually reduce the length of the tables.
 
 Rule of thumb: Use generated keys for entities and composite keys for relationships.
 
