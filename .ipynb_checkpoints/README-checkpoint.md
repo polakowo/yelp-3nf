@@ -12,7 +12,7 @@ As a result, the end user can either create data marts on top of the designed ce
 
 ## Datasets
 
-<img width=200 src="images/1200px-Yelp_Logo.svg.png"/>
+<img width=200 src="https://github.com/polakowo/dataeng/blob/master/images/1200px-Yelp_Logo.svg.png"/>
 
 The [Yelp Open Dataset](https://www.yelp.com/dataset) is a perfect candidate for this project, since: 
 
@@ -67,19 +67,19 @@ This dataset contains information about the demographics of all US cities and ce
 
 ## Data pipeline
 
-<img width=100 src="images/amazon-s3-logo.png"/>
+<img width=100 src="https://github.com/polakowo/dataeng/blob/master/images/amazon-s3-logo.png"/>
 
 All three datasets will reside in a Amazon S3 bucket, which is the easiest and safest option to store and retrieve any amount of data at any time from any other AWS service. 
 
-<img width=100 src="images/1200px-Apache_Spark_Logo.svg.png"/>
+<img width=100 src="https://github.com/polakowo/dataeng/blob/master/images/1200px-Apache_Spark_Logo.svg.png"/>
 
 Since the data is in JSON format and contains arrays and nested fields, it needs first to be transformed into a relational form. By design, Amazon Redshift does not support loading nested data (only Redshift Spectrum enables you to query complex data types such as struct, array, or map, without having to transform or load your data). To do this in a quick and scalable fashion, we will utilize Apache Spark. In particular, we will run an Amazon EMR (Elastic MapReduce) cluster, which uses Apache Spark and Hadoop to quickly & cost-effectively process and analyze vast amounts of data. The another advantage of Spark is the ability to control data quality, thus most of our tests will be done at this stage. With Spark, we will dynamically load JSON files from S3, process them, and store their normalized and enriched versions back into S3 in Parquet format.
 
-<img width=100 src="images/amazon-s3-logo.png"/>
+<img width=100 src="https://github.com/polakowo/dataeng/blob/master/images/amazon-s3-logo.png"/>
 
 Parquet stores nested data structures in a flat columnar format. Compared to a traditional approach where data is stored in row-oriented approach, parquet is more efficient in terms of storage and performance. Parquet files are well supported in the AWS ecosystem. Moreover, compared to JSON and CSV formats, we can store timestamp objects, datetime objects and long texts without any post-processing, and load them into Amazon Redshift as-is. From here, we can use an AWS Glue crawler to discover and register the schema for our datasets to be used in Amazon Athena. But our goal is materializing the data rather than querying directly from files on Amazon S3 - to be able to query the data without expensive load times as experienced in Athena or Redshift Spectrum. 
 
-<img width=150 src="images/aws-redshift-connector.png"/>
+<img width=150 src="https://github.com/polakowo/dataeng/blob/master/images/aws-redshift-connector.png"/>
 
 To load the data from Parquet files into our Redshift DWH, we can rely on multiple options. The easiest one is by using [spark-redshift](https://github.com/databricks/spark-redshift): Spark reads the parquet files from S3 into the Spark cluster, converts the data to Avro format, writes it to S3, and finally issues a COPY SQL query to Redshift to load the data. Or we can have [an AWS Glue job that loads data into an Amazon Redshift](https://www.dbbest.com/blog/aws-glue-etl-service/). But instead, we will define the tables manually. Why? Because that way we can control data quality and consistency, sortkeys, distkeys and compression. Thus, we will issue SQL statements to Redshift to CREATE the tables and the ones to COPY the data. To make our lives easier, we will utilize the AWS Glue's data catalog to derive the correct data types (for example, should we use int or bigint?).
 
