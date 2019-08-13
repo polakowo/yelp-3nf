@@ -1,6 +1,6 @@
 # Datasets
 
-The aim of this project is to create a source-of-truth database by translating a NoSQL data model into a 3NF relational data model, and enrich it with information from third-party data sources. The Yelp Open Dataset is a perfect candidate for this project, since: (1) it is a NoSQL data source; (2) it comprises of 6 files that count together more than 10 million rows; (3) this dataset provides lots of diverse information and allows for many analysis approaches, from traditional analytical queries (such as "Give me the average star rating for each city") to Graph Mining, Photo Classification, Natural Language Processing, and Sentiment Analysis; (4) Moreover, it was produced in a real production setting (as opposed to synthetic data generation). To make the contribution unique, the Yelp dataset was enriched by demographics and weather data. This allows us to make queries such as "Does the number of ratings depend upon the city's population density?" or "Which restaurants are particularly popular during hot weather?".
+The aim of this project is to create a source-of-truth database by translating a NoSQL data model into a 3NF relational data model, and enrich it with information from third-party data sources. The Yelp Open Dataset is a perfect candidate for this project, since: (1) it is a NoSQL data source; (2) it comprises of 6 files that count together more than 10 million rows; (3) this dataset provides lots of diverse information and allows for many analysis approaches, from traditional analytical queries (such as "*Give me the average star rating for each city*") to Graph Mining, Photo Classification, Natural Language Processing, and Sentiment Analysis; (4) Moreover, it was produced in a real production setting (as opposed to synthetic data generation). To make the contribution unique, the Yelp dataset was enriched by demographics and weather data. This allows us to make queries such as "*Does the number of ratings depend upon the city's population density?*" or "*Which restaurants are particularly popular during hot weather?*".
 
 ## Yelp Open Dataset
 
@@ -17,9 +17,10 @@ The Yelp dataset is a subset of Yelp's businesses, reviews, and user data, avail
     - Proceed to the dataset homepage, fill in your information, copy the download link, and paste into the command below. Note: the link is valid for 30 seconds.
 
 ```bash
-wget -O yelp_dataset.tar.gz "[download_link]"
+wget -O yelp_dataset.tar.gz "[your_download_link]"
 tar -xvzf yelp_dataset.tar.gz
 ```
+
     - Finally, transfer the files as described by [this blog](http://codeomitted.com/transfer-files-from-ec2-to-s3/)
     - Remember to provide IAM role and credentials of user who has AmazonS3FullAccess.
     - In case your instance has no AWS CLI installed, follow [this documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
