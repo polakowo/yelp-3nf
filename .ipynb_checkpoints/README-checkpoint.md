@@ -14,7 +14,7 @@ As a result, the end user can either create data marts on top of the designed ce
 
 ## Datasets
 
-<img width=400 src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Yelp_Logo.svg/1200px-Yelp_Logo.svg.png"/>
+<img width=200 src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Yelp_Logo.svg/1200px-Yelp_Logo.svg.png"/>
 
 The [Yelp Open Dataset](https://www.yelp.com/dataset) is a perfect candidate for this project, since: 
 
@@ -81,13 +81,13 @@ Since the data is in JSON format and contains arrays and nested fields, it needs
 
 Parquet stores nested data structures in a flat columnar format. Compared to a traditional approach where data is stored in row-oriented approach, parquet is more efficient in terms of storage and performance. Parquet files are well supported in the AWS ecosystem. Moreover, compared to JSON and CSV formats, we can store timestamp objects, datetime objects and long texts without any post-processing, and load them into Amazon Redshift as-is. From here, we can use an AWS Glue crawler to discover and register the schema for our datasets to be used in Amazon Athena. But our goal is materializing the data rather than querying directly from files on Amazon S3 - to be able to query the data without expensive load times as experienced in Athena or Redshift Spectrum. 
 
-<img width=100 src="https://cdn.sisense.com/wp-content/uploads/aws-redshift-connector.png"/>
+<img width=150 src="https://cdn.sisense.com/wp-content/uploads/aws-redshift-connector.png"/>
 
 To load the data from Parquet files into our Redshift DWH, we can rely on multiple options. The easiest one is by using [spark-redshift](https://github.com/databricks/spark-redshift): Spark reads the parquet files from S3 into the Spark cluster, converts the data to Avro format, writes it to S3, and finally issues a COPY SQL query to Redshift to load the data. Or we can have [an AWS Glue job that loads data into an Amazon Redshift](https://www.dbbest.com/blog/aws-glue-etl-service/). But instead, we will define the tables manually. Why? Because that way we can control data quality and consistency, sortkeys, distkeys and compression. Thus, we will issue SQL statements to Redshift to CREATE the tables and the ones to COPY the data. To make our lives easier, we will utilize the AWS Glue's data catalog to derive the correct data types (for example, should we use int or bigint?).
 
 ## Date updates
 
-The whole ETL process for 7 million reviews and related data lasts about 20 minutes. As our target data model is meant to be the source for other dimensional tables, the ETL process can take longer time. Since the Yelp Open Dataset is only a subset of the real dataset and we don't know how many rows Yelp generates each day, we cannot derive the optimal frequency of the updates. But taking only newly appended rows (for example, those collected for one day) can significantly reduce the amount of time needed.
+The whole ETL process for 7 million reviews and related data lasts about 20 minutes. As our target data model is meant to be the source for other dimensional tables, the ETL process can take longer time. Since the Yelp Open Dataset is only a subset of the real dataset and we don't know how many rows Yelp generates each day, we cannot derive the optimal frequency of the updates. But taking only newly appended rows (for example, those collected for one day) can significantly increase the frequency.
 
 ## Scenarios
 
