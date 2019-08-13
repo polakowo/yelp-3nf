@@ -62,7 +62,7 @@ This dataset contains information about the demographics of all US cities and ce
 
 [Historical Hourly Weather Data](https://www.kaggle.com/selfishgene/historical-hourly-weather-data) is a dataset collected by a Kaggle competitor. The dataset contains 5 years of hourly measurements data of various weather attributes, such as temperature, humidity, and air pressure. This data is available for 27 bigger US cities, 3 cities in Canada, and 6 cities in Israel. Each attribute has it's own file and is organized such that the rows are the time axis (timestamps), and the columns are the different cities. Additionally, there is a separate file to identify which city belongs to which country.
 
-####t Installation
+#### Installation
 
 - Download the whole dataset from https://www.kaggle.com/selfishgene/historical-hourly-weather-data/downloads/historical-hourly-weather-data.zip
 - Unzip and upload `city_attributes.csv`, `temperature.csv`, and `weather_description.csv` files to a separate folder (`weather_dataset`) on your S3 bucket.
