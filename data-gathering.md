@@ -21,7 +21,7 @@ wget -O yelp_dataset.tar.gz "[your_download_link]"
 tar -xvzf yelp_dataset.tar.gz
 ```
 
-    - Finally, transfer the files as described by [this blog](http://codeomitted.com/transfer-files-from-ec2-to-s3/)
+- Finally, transfer the files as described by [this blog](http://codeomitted.com/transfer-files-from-ec2-to-s3/)
     - Remember to provide IAM role and credentials of user who has AmazonS3FullAccess.
     - In case your instance has no AWS CLI installed, follow [this documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
     - In case you come into errors such as "Unable to locate package python3-pip", follow [this answer](https://askubuntu.com/questions/1061486/unable-to-locate-package-python-pip-when-trying-to-install-from-fresh-18-04-in#answer-1061488)
