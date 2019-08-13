@@ -1,6 +1,5 @@
-### Step 3: Define the Data Model
-#### 3.1 Conceptual Data Model
-Map out the conceptual data model and explain why you chose that model
+# Data Model
 
-#### 3.2 Mapping Out Data Pipelines
-List the steps necessary to pipeline the data into the chosen data model
+In the following you will find the data model of the source-of-truth database.
+
+![Data Model](data-model.jpg)
