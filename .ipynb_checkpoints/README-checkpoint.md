@@ -77,6 +77,8 @@ All three datasets will reside in a Amazon S3 bucket, which is the easiest and s
 
 Since the data is in JSON format and contains arrays and nested fields, it needs first to be transformed into a relational form. By design, Amazon Redshift does not support loading nested data (only Redshift Spectrum enables you to query complex data types such as struct, array, or map, without having to transform or load your data). To do this in a quick and scalable fashion, we will utilize Apache Spark. In particular, we will run an Amazon EMR (Elastic MapReduce) cluster, which uses Apache Spark and Hadoop to quickly & cost-effectively process and analyze vast amounts of data. The another advantage of Spark is the ability to control data quality, thus most of our tests will be done at this stage. With Spark, we will dynamically load JSON files from S3, process them, and store their normalized and enriched versions back into S3 in Parquet format.
 
+To configure Amazon EMR to run a PySpark job using Python 3.6, follow [these instructions].(https://aws.amazon.com/premiumsupport/knowledge-center/emr-pyspark-python-3x/)
+
 <img width=100 src="images/amazon-s3-logo.png"/>
 
 Parquet stores nested data structures in a flat columnar format. Compared to a traditional approach where data is stored in row-oriented approach, parquet is more efficient in terms of storage and performance. Parquet files are well supported in the AWS ecosystem. Moreover, compared to JSON and CSV formats, we can store timestamp objects, datetime objects and long texts without any post-processing, and load them into Amazon Redshift as-is. From here, we can use an AWS Glue crawler to discover and register the schema for our datasets to be used in Amazon Athena. But our goal is materializing the data rather than querying directly from files on Amazon S3 - to be able to query the data without expensive load times as experienced in Athena or Redshift Spectrum. 
@@ -91,6 +93,8 @@ In the following image you will find the logical data model of the normalized so
 
 ![Data Model](images/data-model.jpg)
 
+Rule of thumb: Use generated keys for entities and composite keys for relationships.
+
 ## Date updates
 
 The whole ETL process for 7 million reviews and related data lasts about 20 minutes. As our target data model is meant to be the source for other dimensional tables, the ETL process can take longer time. Since the Yelp Open Dataset is only a subset of the real dataset and we don't know how many rows Yelp generates each day, we cannot derive the optimal frequency of the updates. But taking only newly appended rows (for example, those collected for one day) can significantly increase the frequency.
@@ -101,3 +105,9 @@ The following scenarios needs to be addressed:
 - The data was increased by 100x: That wouldn't be a technical issue as both Amazon EMR and Redshift clusters can handle huge amounts of data. Eventually, they would have to be scaled out.
 - The data populates a dashboard that must be updated on a daily basis by 7am every day: That's perfectly plausible and could be done by running the ETL script some time prior to 7am.
 - The database needed to be accessed by 100+ people: That wouldn't be a problem as Redshift is highly scalable and available.
+
+## Further resources
+
+- [Documentation for Yelp Open Dataset](https://www.yelp.com/dataset/documentation/main)
+- [Yelp's Academic Dataset Examples](https://github.com/Yelp/dataset-examples)
+- [Spark Tips & Tricks](https://gist.github.com/dusenberrymw/30cebf98263fae206ea0ffd2cb155813)
