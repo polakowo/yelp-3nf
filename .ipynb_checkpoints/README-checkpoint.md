@@ -16,8 +16,6 @@ As a result, the end user can either create data marts on top of the designed ce
 
 <img width=200 src="images/1200px-Yelp_Logo.svg.png"/>
 
-https://github.com/polakowo/dataeng/blob/master/images/1200px-Apache_Spark_Logo.svg.png.png
-
 The [Yelp Open Dataset](https://www.yelp.com/dataset) is a perfect candidate for this project, since: 
 
 - (1) it is a NoSQL data source; 
@@ -53,20 +51,20 @@ tar -xvzf yelp_dataset.tar.gz
 
 ### U.S. City Demographic Data
 
-This dataset contains information about the demographics of all US cities and census-designated places with a population greater or equal to 65,000. This data comes from the US Census Bureau's 2015 American Community Survey. Each JSON object describes the demographics of a particular city and race, and so it can be uniquely identified by the city, state and race fields. More information can be find on [the website](https://public.opendatasoft.com/explore/dataset/us-cities-demographics/information/) under the section "Dataset schema".
+This dataset contains information about the demographics of all US cities and census-designated places with a population greater or equal to 65,000. This data comes from the US Census Bureau's 2015 American Community Survey. Each JSON object describes the demographics of a particular city and race, and so it can be uniquely identified by the city, state and race fields. More information can be found [here](https://public.opendatasoft.com/explore/dataset/us-cities-demographics/information/) under the section "Dataset schema".
 
 #### Installation
 
-- Download the JSON file from https://public.opendatasoft.com/explore/dataset/us-cities-demographics/export/
+- Download the JSON file from [here](https://public.opendatasoft.com/explore/dataset/us-cities-demographics/export/)
 - Upload it to a separate folder (`demo_dataset`) on your S3 bucket.
 
 ### Historical Hourly Weather Data 2012-2017
 
 [Historical Hourly Weather Data](https://www.kaggle.com/selfishgene/historical-hourly-weather-data) is a dataset collected by a Kaggle competitor. The dataset contains 5 years of hourly measurements data of various weather attributes, such as temperature, humidity, and air pressure. This data is available for 27 bigger US cities, 3 cities in Canada, and 6 cities in Israel. Each attribute has it's own file and is organized such that the rows are the time axis (timestamps), and the columns are the different cities. Additionally, there is a separate file to identify which city belongs to which country.
 
-####t Installation
+#### Installation
 
-- Download the whole dataset from https://www.kaggle.com/selfishgene/historical-hourly-weather-data/downloads/historical-hourly-weather-data.zip
+- Download the whole dataset from [here](https://www.kaggle.com/selfishgene/historical-hourly-weather-data/downloads/historical-hourly-weather-data.zip)
 - Unzip and upload `city_attributes.csv`, `temperature.csv`, and `weather_description.csv` files to a separate folder (`weather_dataset`) on your S3 bucket.
 
 ## Data pipeline
@@ -83,7 +81,7 @@ All three datasets will reside in a Amazon S3 bucket, which is the easiest and s
 
 Since the data is in JSON format and contains arrays and nested fields, it needs first to be transformed into a relational form. By design, Amazon Redshift does not support loading nested data (only Redshift Spectrum enables you to query complex data types such as struct, array, or map, without having to transform or load your data). To do this in a quick and scalable fashion, we will utilize Apache Spark. In particular, we will run an Amazon EMR (Elastic MapReduce) cluster, which uses Apache Spark and Hadoop to quickly & cost-effectively process and analyze vast amounts of data. The another advantage of Spark is the ability to control data quality, thus most of our tests will be done at this stage. With Spark, we will dynamically load JSON files from S3, process them, and store their normalized and enriched versions back into S3 in Parquet format.
 
-To configure Amazon EMR to run a PySpark job using Python 3.6, follow [these instructions].(https://aws.amazon.com/premiumsupport/knowledge-center/emr-pyspark-python-3x/)
+To configure Amazon EMR to run a PySpark job using Python 3.6, follow [these instructions](https://aws.amazon.com/premiumsupport/knowledge-center/emr-pyspark-python-3x/).
 
 ### Staging data
 
