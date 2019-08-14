@@ -93,7 +93,7 @@ To load the data from Parquet files into our Redshift DWH, we can rely on multip
 
 The data model is a 3NF-normalized relational model, which was designed to be neutral to different kinds of analytical queries. The data should depend on the key [1NF], the whole key [2NF] and nothing but the key [3NF] (so help me Codd). Forms beyond 4NF are mainly of academic interest. The following image depicts the logical model:
 
-![Data Model](images/data-model.jpg)
+![Data Model](images/data-model.png)
 
 Note: fields such as *compliment_&ast;* are just placeholders for multiple fields with the same prefix (*compliment*). This is done to visually reduce the length of the tables.
 
@@ -150,7 +150,7 @@ Tips were written by a user on a business. Tips are shorter than reviews and ten
 
 #### *photos*
 
-Contains photo data including the caption and classification (one of "food", "drink", "menu", "inside" or "outside").
+Contains photo data including the caption and classification.
 
 ## Date updates
 
