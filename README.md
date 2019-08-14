@@ -95,6 +95,13 @@ Parquet stores nested data structures in a flat columnar format. Compared to a t
 
 To load the data from Parquet files into our Redshift DWH, we can rely on multiple options. The easiest one is by using [spark-redshift](https://github.com/databricks/spark-redshift): Spark reads the parquet files from S3 into the Spark cluster, converts the data to Avro format, writes it to S3, and finally issues a COPY SQL query to Redshift to load the data. Or we can have [an AWS Glue job that loads data into an Amazon Redshift](https://www.dbbest.com/blog/aws-glue-etl-service/). But instead, we will define the tables manually. Why? Because that way we can control data quality and consistency, sortkeys, distkeys and compression. Thus, we will issue SQL statements to Redshift to CREATE the tables and the ones to COPY the data. To make our lives easier, we will utilize the AWS Glue's data catalog to derive the correct data types (for example, should we use int or bigint?).
 
+<img width=150 src="images/airflow-logo.png"/>
+
+The whole loding process can be easily executed by using Apache Airflow, which is a tool for orchestrating complex computational workflows and data processing pipelines. The advantage of Airflow over Python ETL scripts is that it provides many add-on modules for operators that already exist from the community, such that we can build useful stuff quickly and in a modular fashion. Also, Airflow scheduler is designed to run as a persistent service in an Airflow production environment (as opposed to cron jobs?). In our example, Airflow takes control of loading Parquet files into Redshift in right order and with data quality checks in place. The image below shows the DAG of the loading process. The order was derived based on the references between tables; for example, because *reviews* table references *businesses*, *businesses* have to be loaded first, otherwise, the referential integrity is violated (and you get errors).
+
+<img width=500 src="images/s3_to_redshift.png"/>
+
+
 ## Data model and dictionary
 
 The data model is a 3NF-normalized relational model, which was designed to be neutral to different kinds of analytical queries. The data should depend on the key [1NF], the whole key [2NF] and nothing but the key [3NF] (so help me Codd). Forms beyond 4NF are mainly of academic interest. The following image depicts the logical model:
