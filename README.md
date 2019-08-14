@@ -89,15 +89,68 @@ Parquet stores nested data structures in a flat columnar format. Compared to a t
 
 To load the data from Parquet files into our Redshift DWH, we can rely on multiple options. The easiest one is by using [spark-redshift](https://github.com/databricks/spark-redshift): Spark reads the parquet files from S3 into the Spark cluster, converts the data to Avro format, writes it to S3, and finally issues a COPY SQL query to Redshift to load the data. Or we can have [an AWS Glue job that loads data into an Amazon Redshift](https://www.dbbest.com/blog/aws-glue-etl-service/). But instead, we will define the tables manually. Why? Because that way we can control data quality and consistency, sortkeys, distkeys and compression. Thus, we will issue SQL statements to Redshift to CREATE the tables and the ones to COPY the data. To make our lives easier, we will utilize the AWS Glue's data catalog to derive the correct data types (for example, should we use int or bigint?).
 
-## Data model
+## Data model and dictionary
 
-The following image depicts the 3NF-normalized data model:
+The data model is a 3NF-normalized relational model, which was designed to be neutral to different kinds of analytical queries. The data should depend on the key [1NF], the whole key [2NF] and nothing but the key [3NF] (so help me Codd). Forms beyond 4NF are mainly of academic interest. The following image depicts the logical model:
 
 ![Data Model](images/data-model.jpg)
 
 Note: fields such as *compliment_&ast;* are just placeholders for multiple fields with the same prefix (*compliment*). This is done to visually reduce the length of the tables.
 
-Rule of thumb: Use generated keys for entities and composite keys for relationships.
+The model consists of 15 tables as a result of normalizing and joining 6 tables provided by Yelp, 1 table with demographic information and 2 tables with weather information. The schema is closer to a Snowflake schema as we have two fact tables - *reviews* and *tips* - and many dimensional tables with multiple levels of hierarchy and many-to-many relationships. Some tables keep their native keys, while for others we generated monotonically increasing ids. Rule of thumb: Use generated keys for entities and composite keys for relationships. We also casted timestamps and dates into Spark's native data types to be able to import them into Amazon Redshift in a correct format.
+
+#### *businesses*
+
+The most referenced table in the model. Contains the name of the business, the current star rating, the number of reviews, and whether the business is currently open. The address (one-to-one relationship), hours (one-to-one relationship), businesses attributes (one-to-one relationship) and categories (one-to-many relationship) were outsourced to separate tables as part of the normalization process.
+
+#### *business_attributes*
+
+This was the most challenging part of the remodeling, since Yelp kept business attributes as nested dict. All fields in the source table were strings, so they had to be parsed into respective data types. Some values were dirty, for example, boolean fields can be `"True"`, `"False"`, `"None"` and `None`, while some string fields were of double unicode format `u"u'string'"`. Moreover, some fields were dicts formatted as strings. The resulting nested JSON structure of three levels had to be flattened.
+
+#### *business_categories* and *categories*
+
+In the original table, business categories were stored as an array. The best solution was to outsource it into a separate table. One way of doing this is to assign a column to each category, but what if we are going to add a new category later on? Then we must update this whole table to reflect the change - this is a clear violation of the 3NF, where columns should not have any transitional function relations. Thus, we create two tables: *categories*, which contains categories keyed by their ids, and *business_categories*, which contains tuples of business ids and category ids.
+
+#### *hours*
+
+Business hours were stored as a dict where each key is day of week and value is string of format `"hour:minute-hour:minute"`. The best way to make the data representation neutral to queries, is to split the "from hour" and "to hour" parts into separate columns and combine "hour" and "minute" into a single field of type integer, for example `"10:00-21:00"` into `1000` and `2100` respectively. This way we could easily formulate the following query:
+
+```sql
+-- Find businesses opened on Sunday at 8pm
+SELECT business_id FROM hours WHERE Sunday_from <= 2000 AND Sunday_to > 2000;
+```
+
+#### *addresses*
+
+A common practice is to separate business data from address data and connect them though a synthetic key. The resulting link is a one-to-one relationship. Furthermore, we separated addresses from cities, since states and demographic data are dependent on cities only (otherwise 3NF violation). 
+
+#### *cities*
+
+This table contains city name and state code coming from the Yelp dataset and fields on demographics. For most of the cities there is no demographic information since they are too small (< 65k). Each record in the table can be uniquely identified by the city and postal code, but we decided for a single primary key to connect both addresses and cities.
+
+#### *city_weather*
+
+The table *city_weather* was composed out of CSV files `temperature.csv` and `weather_description.csv`. Both files contain information on various (global) cities. To filter the cities by country (= US), we first had to read the `city_attributes.csv`. The issue with the dataset is that it doesn't provide us with the respective state codes, so how do we know whether Phoenix is in AZ or TX? The most appropriate solution is finding the biggest city. So we used Google to find the respective state codes and then matched those with the cities available in the Yelp dataset. As a result, 8 cities could be enriched. Since both temperatures and weather description data were recorded hourly, we decided to group them by day and apply an aggregation statistic. For temperatures (float) we averaged them, while for weather description (string) we chose the most frequent one.
+
+#### *checkins*
+
+This table contains checkins on a business and required no further transformations.
+
+#### *reviews*
+
+The *reviews* table contains full review text data including the user id that wrote the review and the business id the review is written for. It is the most central table in our data schema and structured similarly to a fact table. But in order to convert it into a fact table, the date column has to be outsourced into a separate dimension table and the text has to be omitted.
+
+#### *users*, *elite_years* and *friends*
+
+Originally, the user data includes the user's friend mapping and all the metadata associated with the user. But since the fields `friends` and `elite` are arrays, they have become separate relations in our model, both structured similarly to the *business_categories* table and having composite primary keys. The format of the table *friends* is a very convenient one, as it can be directly fed into Apache Spark's GraphX API to build a social graph of Yelp users.
+
+#### *tips*
+
+Tips were written by a user on a business. Tips are shorter than reviews and tend to convey quick suggestions. The table required no transformations apart from assigning it a generated key.
+
+#### *photos*
+
+Contains photo data including the caption and classification (one of "food", "drink", "menu", "inside" or "outside").
 
 ## Date updates
 
