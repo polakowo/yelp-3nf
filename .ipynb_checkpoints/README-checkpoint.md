@@ -71,13 +71,13 @@ This dataset contains information about the demographics of all US cities and ce
 
 ## Data pipeline
 
-#### Storing data
+### Storing data
 
 <img width=100 src="images/amazon-s3-logo.png"/>
 
 All three datasets will reside in a Amazon S3 bucket, which is the easiest and safest option to store and retrieve any amount of data at any time from any other AWS service. 
 
-#### Ingesting and processing data
+### Ingesting and processing data
 
 <img width=100 src="images/1200px-Apache_Spark_Logo.svg.png"/>
 
@@ -85,13 +85,13 @@ Since the data is in JSON format and contains arrays and nested fields, it needs
 
 To configure Amazon EMR to run a PySpark job using Python 3.6, follow [these instructions].(https://aws.amazon.com/premiumsupport/knowledge-center/emr-pyspark-python-3x/)
 
-#### Staging data
+### Staging data
 
 <img width=100 src="images/amazon-s3-logo.png"/>
 
 Parquet stores nested data structures in a flat columnar format. Compared to a traditional approach where data is stored in row-oriented approach, parquet is more efficient in terms of storage and performance. Parquet files are well supported in the AWS ecosystem. Moreover, compared to JSON and CSV formats, we can store timestamp objects, datetime objects and long texts without any post-processing, and load them into Amazon Redshift as-is. From here, we can use an AWS Glue crawler to discover and register the schema for our datasets to be used in Amazon Athena. But our goal is materializing the data rather than querying directly from files on Amazon S3 - to be able to query the data without expensive load times as experienced in Athena or Redshift Spectrum. 
 
-#### Loading data into DWH
+### Loading data into DWH
 
 <img width=150 src="images/aws-redshift-connector.png"/>
 
