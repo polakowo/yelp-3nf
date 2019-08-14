@@ -99,7 +99,7 @@ To load the data from Parquet files into our Redshift DWH, we can rely on multip
 
 The whole loding process can be easily executed by using Apache Airflow, which is a tool for orchestrating complex computational workflows and data processing pipelines. The advantage of Airflow over Python ETL scripts is that it provides many add-on modules for operators that already exist from the community, such that we can build useful stuff quickly and in a modular fashion. Also, Airflow scheduler is designed to run as a persistent service in an Airflow production environment (as opposed to cron jobs?). In our example, Airflow takes control of loading Parquet files into Redshift in right order and with data quality checks in place. The image below shows the DAG of the loading process. The order was derived based on the references between tables; for example, because *reviews* table references *businesses*, *businesses* have to be loaded first, otherwise, the referential integrity is violated (and you get errors).
 
-<img width=500 src="images/s3_to_redshift.png"/>
+<img src="images/s3_to_redshift.png"/>
 
 
 ## Data model and dictionary
