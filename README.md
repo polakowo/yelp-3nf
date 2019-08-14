@@ -71,9 +71,13 @@ This dataset contains information about the demographics of all US cities and ce
 
 ## Data pipeline
 
+#### Storing data
+
 <img width=100 src="images/amazon-s3-logo.png"/>
 
 All three datasets will reside in a Amazon S3 bucket, which is the easiest and safest option to store and retrieve any amount of data at any time from any other AWS service. 
+
+#### Ingesting and processing data
 
 <img width=100 src="images/1200px-Apache_Spark_Logo.svg.png"/>
 
@@ -81,9 +85,13 @@ Since the data is in JSON format and contains arrays and nested fields, it needs
 
 To configure Amazon EMR to run a PySpark job using Python 3.6, follow [these instructions].(https://aws.amazon.com/premiumsupport/knowledge-center/emr-pyspark-python-3x/)
 
+#### Staging data
+
 <img width=100 src="images/amazon-s3-logo.png"/>
 
 Parquet stores nested data structures in a flat columnar format. Compared to a traditional approach where data is stored in row-oriented approach, parquet is more efficient in terms of storage and performance. Parquet files are well supported in the AWS ecosystem. Moreover, compared to JSON and CSV formats, we can store timestamp objects, datetime objects and long texts without any post-processing, and load them into Amazon Redshift as-is. From here, we can use an AWS Glue crawler to discover and register the schema for our datasets to be used in Amazon Athena. But our goal is materializing the data rather than querying directly from files on Amazon S3 - to be able to query the data without expensive load times as experienced in Athena or Redshift Spectrum. 
+
+#### Loading data into DWH
 
 <img width=150 src="images/aws-redshift-connector.png"/>
 
@@ -98,6 +106,8 @@ The data model is a 3NF-normalized relational model, which was designed to be ne
 Note: fields such as *compliment_&ast;* are just placeholders for multiple fields with the same prefix (*compliment*). This is done to visually reduce the length of the tables.
 
 The model consists of 15 tables as a result of normalizing and joining 6 tables provided by Yelp, 1 table with demographic information and 2 tables with weather information. The schema is closer to a Snowflake schema as we have two fact tables - *reviews* and *tips* - and many dimensional tables with multiple levels of hierarchy and many-to-many relationships. Some tables keep their native keys, while for others we generated monotonically increasing ids. Rule of thumb: Use generated keys for entities and composite keys for relationships. We also casted timestamps and dates into Spark's native data types to be able to import them into Amazon Redshift in a correct format.
+
+For more details on certain fields, visit [Yelp Dataset JSON](https://www.yelp.com/dataset/documentation/main)
 
 #### *businesses*
 
@@ -159,9 +169,9 @@ The whole ETL process for 7 million reviews and related data lasts about 20 minu
 ## Scenarios
 
 The following scenarios needs to be addressed:
-- The data was increased by 100x: That wouldn't be a technical issue as both Amazon EMR and Redshift clusters can handle huge amounts of data. Eventually, they would have to be scaled out.
-- The data populates a dashboard that must be updated on a daily basis by 7am every day: That's perfectly plausible and could be done by running the ETL script some time prior to 7am.
-- The database needed to be accessed by 100+ people: That wouldn't be a problem as Redshift is highly scalable and available.
+- **The data was increased by 100x:** That wouldn't be a technical issue as both Amazon EMR and Redshift clusters can handle huge amounts of data. Eventually, they would have to be scaled out.
+- **The data populates a dashboard that must be updated on a daily basis by 7am every day:** That's perfectly plausible and could be done by running the ETL script some time prior to 7am.
+- **The database needed to be accessed by 100+ people:** That wouldn't be a problem as Redshift is highly scalable and available.
 
 ## Further resources
 
