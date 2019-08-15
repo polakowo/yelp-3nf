@@ -99,9 +99,15 @@ To load the data from Parquet files into our Redshift DWH, we can rely on multip
 
 The whole loading process can be easily executed by using Apache Airflow, which is a tool for orchestrating complex computational workflows and data processing pipelines. The advantage of Airflow over Python ETL scripts is that it provides many add-on modules for operators that already exist from the community, such that we can build useful stuff quickly and in a modular fashion. Also, Airflow scheduler is designed to run as a persistent service in an Airflow production environment (as opposed to cron jobs?). 
 
-In our example, Airflow takes control of loading Parquet files into Redshift in right order and with data quality checks in place. This is done with the [S3ToRedshiftOperator](https://github.com/airflow-plugins/redshift_plugin). This operator takes a table definition (we stored it in YAML format), creates the Redshift table from it and does COPY. The image below shows the DAG of the loading process. The order was derived based on the references between tables; for example, because *reviews* table references *businesses*, *businesses* have to be loaded first, otherwise, the referential integrity is violated (and you get errors).
+In our example, Airflow takes control of loading Parquet files into Redshift in right order and with consistency checks in place. The whole data loading pipeline is divided into two subDAGs: one that loads the data and one that checks the data.
+
+<img width=500 src="images/yelp-etl.png"/>
+
+The loading operation is done with the [S3ToRedshiftOperator](https://github.com/airflow-plugins/redshift_plugin), provided by the Airflow community. This operator takes the table definition as a dictionary, creates the Redshift table from it and performs the COPY operation. All table definitions are stored in a YAML configuration file. The order and relationships between operators were derived based on the references between tables; for example, because *reviews* table references *businesses*, *businesses* have to be loaded first, otherwise, the referential integrity is violated (and you may get errors).
 
 <img src="images/s3_to_redshift.png"/>
+
+Some data quality checks are already done when transforming data with Spark, while more formal checks can be found at the end of the data pipeline. These checks are executed with a custom RedshiftCheckOperator, which extends the Airflow's default [CheckOperator](https://github.com/apache/airflow/blob/master/airflow/operators/check_operator.py). It takes a SQL statement, the expected pass value, and optionally the tolerance of the result, and performs a simple value check. 
 
 
 ## Data model and dictionary
@@ -128,13 +134,13 @@ This was the most challenging part of the remodeling, since Yelp kept business a
 
 In the original table, business categories were stored as an array. The best solution was to outsource it into a separate table. One way of doing this is to assign a column to each category, but what if we are going to add a new category later on? Then we must update this whole table to reflect the change - this is a clear violation of the 3NF, where columns should not have any transitional function relations. Thus, we create two tables: *categories*, which contains categories keyed by their ids, and *business_categories*, which contains tuples of business ids and category ids.
 
-#### *hours*
+#### *business_hours*
 
 Business hours were stored as a dict where each key is day of week and value is string of format `"hour:minute-hour:minute"`. The best way to make the data representation neutral to queries, is to split the "from hour" and "to hour" parts into separate columns and combine "hour" and "minute" into a single field of type integer, for example `"10:00-21:00"` into `1000` and `2100` respectively. This way we could easily formulate the following query:
 
 ```sql
 -- Find businesses opened on Sunday at 8pm
-SELECT business_id FROM hours WHERE Sunday_from <= 2000 AND Sunday_to > 2000;
+SELECT business_id FROM business_hours WHERE Sunday_from <= 2000 AND Sunday_to > 2000;
 ```
 
 #### *addresses*
