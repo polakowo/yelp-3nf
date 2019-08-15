@@ -109,6 +109,18 @@ The loading operation is done with the [S3ToRedshiftOperator](https://github.com
 
 Some data quality checks are already done when transforming data with Spark, while more formal checks can be found at the end of the data pipeline. These checks are executed with a custom RedshiftCheckOperator, which extends the Airflow's default [CheckOperator](https://github.com/apache/airflow/blob/master/airflow/operators/check_operator.py). It takes a SQL statement, the expected pass value, and optionally the tolerance of the result, and performs a simple value check. 
 
+#### Installation
+
+- Use [Quick Start](https://airflow.apache.org/start.html) to make a local Airflow instance up and running.
+- Copy `dags` and `plugins` folders to your Airflow work environment (under `AIRFLOW_HOME` path variable)
+- Create a new AWS connection `aws_credentials` by providing user credentials and ARN of the Redshift cluster.
+
+<img src="images/aws-connection.png"/>
+
+- Create a new Redshift connection `redshift` by providing database connection parameters.
+
+<img src="images/redshift-connection.png"/>
+
 
 ## Data model and dictionary
 
