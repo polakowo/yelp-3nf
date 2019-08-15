@@ -37,47 +37,6 @@ This dataset contains information about the demographics of all US cities and ce
 
 [Historical Hourly Weather Data](https://www.kaggle.com/selfishgene/historical-hourly-weather-data) is a dataset collected by a Kaggle competitor. The dataset contains 5 years of hourly measurements data of various weather attributes, such as temperature, humidity, and air pressure. This data is available for 27 bigger US cities, 3 cities in Canada, and 6 cities in Israel. Each attribute has it's own file and is organized such that the rows are the time axis (timestamps), and the columns are the different cities. Additionally, there is a separate file to identify which city belongs to which country.
 
-## Data pipeline
-
-### Storing data
-
-<img width=100 src="images/amazon-s3-logo.png"/>
-
-All three datasets will reside in a Amazon S3 bucket, which is the easiest and safest option to store and retrieve any amount of data at any time from any other AWS service. 
-
-### Ingesting and processing data
-
-<img width=100 src="images/1200px-Apache_Spark_Logo.svg.png"/>
-
-Since the data is in JSON format and contains arrays and nested fields, it needs first to be transformed into a relational form. By design, Amazon Redshift does not support loading nested data (only Redshift Spectrum enables you to query complex data types such as struct, array, or map, without having to transform or load your data). To do this in a quick and scalable fashion, we will utilize Apache Spark. In particular, we will run an Amazon EMR (Elastic MapReduce) cluster, which uses Apache Spark and Hadoop to quickly & cost-effectively process and analyze vast amounts of data. The another advantage of Spark is the ability to control data quality, thus most of our tests will be done at this stage. With Spark, we will dynamically load JSON files from S3, process them, and store their normalized and enriched versions back into S3 in Parquet format.
-
-### Staging data
-
-<img width=100 src="images/amazon-s3-logo.png"/>
-
-Parquet stores nested data structures in a flat columnar format. Compared to a traditional approach where data is stored in row-oriented approach, parquet is more efficient in terms of storage and performance. Parquet files are well supported in the AWS ecosystem. Moreover, compared to JSON and CSV formats, we can store timestamp objects, datetime objects and long texts without any post-processing, and load them into Amazon Redshift as-is. From here, we can use an AWS Glue crawler to discover and register the schema for our datasets to be used in Amazon Athena. But our goal is materializing the data rather than querying directly from files on Amazon S3 - to be able to query the data without expensive load times as experienced in Athena or Redshift Spectrum. 
-
-### Loading data into DWH
-
-<img width=150 src="images/aws-redshift-connector.png"/>
-
-To load the data from Parquet files into our Redshift DWH, we can rely on multiple options. The easiest one is by using [spark-redshift](https://github.com/databricks/spark-redshift): Spark reads the parquet files from S3 into the Spark cluster, converts the data to Avro format, writes it to S3, and finally issues a COPY SQL query to Redshift to load the data. Or we can have [an AWS Glue job that loads data into an Amazon Redshift](https://www.dbbest.com/blog/aws-glue-etl-service/). But instead, we will define the tables manually. Why? Because that way we can control data quality and consistency, sortkeys, distkeys and compression. Thus, we will issue SQL statements to Redshift to CREATE the tables and the ones to COPY the data. To make our lives easier, we will utilize the AWS Glue's data catalog to derive the correct data types (for example, should we use int or bigint?).
-
-<img width=100 src="images/airflow-stack-220x234-613461a0bb1df0b065a5b69146fbe061.png"/>
-
-The whole loading process can be easily executed by using Apache Airflow, which is a tool for orchestrating complex computational workflows and data processing pipelines. The advantage of Airflow over Python ETL scripts is that it provides many add-on modules for operators that already exist from the community, such that we can build useful stuff quickly and in a modular fashion. Also, Airflow scheduler is designed to run as a persistent service in an Airflow production environment (as opposed to cron jobs?). 
-
-In our example, Airflow takes control of loading Parquet files into Redshift in right order and with consistency checks in place. The whole data loading pipeline is divided into two subDAGs: one that loads the data and one that checks the data.
-
-<img width=500 src="images/yelp-etl.png"/>
-
-The loading operation is done with the [S3ToRedshiftOperator](https://github.com/airflow-plugins/redshift_plugin), provided by the Airflow community. This operator takes the table definition as a dictionary, creates the Redshift table from it and performs the COPY operation. All table definitions are stored in a YAML configuration file. The order and relationships between operators were derived based on the references between tables; for example, because *reviews* table references *businesses*, *businesses* have to be loaded first, otherwise, the referential integrity is violated (and you may get errors).
-
-<img src="images/s3_to_redshift.png"/>
-
-Some data quality checks are already done when transforming data with Spark, while more formal checks can be found at the end of the data pipeline. These checks are executed with a custom RedshiftCheckOperator, which extends the Airflow's default [CheckOperator](https://github.com/apache/airflow/blob/master/airflow/operators/check_operator.py). It takes a SQL statement, the expected pass value, and optionally the tolerance of the result, and performs a simple value check. 
-
-
 ## Data model and dictionary
 
 The data model is a 3NF-normalized relational model, which was designed to be neutral to different kinds of analytical queries. The data should depend on the key [1NF], the whole key [2NF] and nothing but the key [3NF] (so help me Codd). Forms beyond 4NF are mainly of academic interest. The following image depicts the logical model:
@@ -88,7 +47,7 @@ Note: fields such as *compliment_&ast;* are just placeholders for multiple field
 
 The model consists of 15 tables as a result of normalizing and joining 6 tables provided by Yelp, 1 table with demographic information and 2 tables with weather information. The schema is closer to a Snowflake schema as we have two fact tables - *reviews* and *tips* - and many dimensional tables with multiple levels of hierarchy and many-to-many relationships. Some tables keep their native keys, while for others we generated monotonically increasing ids. Rule of thumb: Use generated keys for entities and composite keys for relationships. We also casted timestamps and dates into Spark's native data types to be able to import them into Amazon Redshift in a correct format.
 
-For more details on certain fields, visit [Yelp Dataset JSON](https://www.yelp.com/dataset/documentation/main)
+For more details on certain fields, visit [Yelp Dataset JSON](https://www.yelp.com/dataset/documentation/main) or  [table_definitions.yml](https://github.com/polakowo/yelp-3nf/blob/master/data-pipelines/redshift/airflow/dags/configs/table_definitions.yml)
 
 #### *businesses*
 
@@ -143,6 +102,46 @@ Tips were written by a user on a business. Tips are shorter than reviews and ten
 
 Contains photo data including the caption and classification.
 
+## Data pipeline
+
+### Storing data
+
+<img width=100 src="images/amazon-s3-logo.png"/>
+
+All three datasets will reside in a Amazon S3 bucket, which is the easiest and safest option to store and retrieve any amount of data at any time from any other AWS service. 
+
+### Ingesting and processing data
+
+<img width=100 src="images/1200px-Apache_Spark_Logo.svg.png"/>
+
+Since the data is in JSON format and contains arrays and nested fields, it needs first to be transformed into a relational form. By design, Amazon Redshift does not support loading nested data (only Redshift Spectrum enables you to query complex data types such as struct, array, or map, without having to transform or load your data). To do this in a quick and scalable fashion, we will utilize Apache Spark. In particular, we will run an Amazon EMR (Elastic MapReduce) cluster, which uses Apache Spark and Hadoop to quickly & cost-effectively process and analyze vast amounts of data. The another advantage of Spark is the ability to control data quality, thus most of our tests will be done at this stage. With Spark, we will dynamically load JSON files from S3, process them, and store their normalized and enriched versions back into S3 in Parquet format.
+
+### Staging data
+
+<img width=100 src="images/amazon-s3-logo.png"/>
+
+Parquet stores nested data structures in a flat columnar format. Compared to a traditional approach where data is stored in row-oriented approach, parquet is more efficient in terms of storage and performance. Parquet files are well supported in the AWS ecosystem. Moreover, compared to JSON and CSV formats, we can store timestamp objects, datetime objects and long texts without any post-processing, and load them into Amazon Redshift as-is. From here, we can use an AWS Glue crawler to discover and register the schema for our datasets to be used in Amazon Athena. But our goal is materializing the data rather than querying directly from files on Amazon S3 - to be able to query the data without expensive load times as experienced in Athena or Redshift Spectrum. 
+
+### Loading data into DWH
+
+<img width=150 src="images/aws-redshift-connector.png"/>
+
+To load the data from Parquet files into our Redshift DWH, we can rely on multiple options. The easiest one is by using [spark-redshift](https://github.com/databricks/spark-redshift): Spark reads the parquet files from S3 into the Spark cluster, converts the data to Avro format, writes it to S3, and finally issues a COPY SQL query to Redshift to load the data. Or we can have [an AWS Glue job that loads data into an Amazon Redshift](https://www.dbbest.com/blog/aws-glue-etl-service/). But instead, we will define the tables manually. Why? Because that way we can control data quality and consistency, sortkeys, distkeys and compression. Thus, we will issue SQL statements to Redshift to CREATE the tables and the ones to COPY the data. To make our lives easier, we will utilize the AWS Glue's data catalog to derive the correct data types (for example, should we use int or bigint?).
+
+<img width=100 src="images/airflow-stack-220x234-613461a0bb1df0b065a5b69146fbe061.png"/>
+
+The whole loading process can be easily executed by using Apache Airflow, which is a tool for orchestrating complex computational workflows and data processing pipelines. The advantage of Airflow over Python ETL scripts is that it provides many add-on modules for operators that already exist from the community, such that we can build useful stuff quickly and in a modular fashion. Also, Airflow scheduler is designed to run as a persistent service in an Airflow production environment (as opposed to cron jobs?). 
+
+In our example, Airflow takes control of loading Parquet files into Redshift in right order and with consistency checks in place. The whole data loading pipeline is divided into two subDAGs: one that loads the data and one that checks the data.
+
+<img width=500 src="images/yelp-etl.png"/>
+
+The loading operation is done with the [S3ToRedshiftOperator](https://github.com/airflow-plugins/redshift_plugin), provided by the Airflow community. This operator takes the table definition as a dictionary, creates the Redshift table from it and performs the COPY operation. All table definitions are stored in a YAML configuration file. The order and relationships between operators were derived based on the references between tables; for example, because *reviews* table references *businesses*, *businesses* have to be loaded first, otherwise, the referential integrity is violated (and you may get errors). Thus, data integrity and referential constraints are automatically enforced while populating the Redshift database.
+
+<img src="images/s3_to_redshift.png"/>
+
+Some data quality checks are already done when transforming data with Spark. More formal checks can be found at the end of the data pipeline. These checks are executed with a custom [RedshiftCheckOperator](https://github.com/polakowo/yelp-3nf/blob/master/data-pipelines/redshift/airflow/plugins/redshift_plugin/operators/redshift_check_operator.py), which extends the Airflow's default [CheckOperator](https://github.com/apache/airflow/blob/master/airflow/operators/check_operator.py). It takes a SQL statement, the expected pass value, and optionally the tolerance of the result, and performs a simple value check.
+
 ## Date updates
 
 The whole ETL process for 7 million reviews and related data lasts about 20 minutes. As our target data model is meant to be the source for other dimensional tables, the ETL process can take longer time. Since the Yelp Open Dataset is only a subset of the real dataset and we don't know how many rows Yelp generates each day, we cannot derive the optimal frequency of the updates. But taking only newly appended rows (for example, those collected for one day) can significantly increase the frequency.
@@ -160,6 +159,7 @@ The following scenarios needs to be addressed:
 
 - Create an S3 bucket. 
     - Ensure that the bucket is in the same region as your Amazon EMR and Redshift clusters.
+    - Be careful with read permissions - you may end up having to pay lots of fees in data transfers.
 - Option 1:
     - Download [Yelp Open Dataset](https://www.yelp.com/dataset) and directly upload to your S3 bucket (`yelp_dataset` folder).
 - Option 2 (for slow internet connections):
@@ -183,7 +183,7 @@ The following scenarios needs to be addressed:
 
 - Configure and create your EMR cluster (with Apache Spark enabled)
 - To configure Amazon EMR to run a PySpark job using Python 3.6, follow [these instructions](https://aws.amazon.com/premiumsupport/knowledge-center/emr-pyspark-python-3x/)
-- Create a new notebook and execute cells defined in `interactive-yelp-etl.ipynb`
+- Create a new notebook and execute commands defined in [interactive-yelp-etl.ipynb](https://nbviewer.jupyter.org/github/polakowo/yelp-3nf/blob/master/data-pipelines/spark/interactive-yelp-etl.ipynb)
 
 ### Amazon Redshift
 
