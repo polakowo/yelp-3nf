@@ -8,7 +8,7 @@ The developed data pipeline translates the non-relational Yelp dataset distribut
 
 <img width=500 src="images/1*eeiD15Xwc_2Ul2DA5u_-Gw.png"/>
 
-The designed Amazon Redshift data warehouse is meant to be a centralized data repository which is 3NF normalized. This repository is designed as a single integrated source of truth. Dimensional data marts can be then created from the DWH based on end user needs. This architecture ensures data integrity and consistency; it also brings the advantage of coordinating data marts through the same ETL processes. As a result, the end user can design a set of dimensional tables on top of the normalized data, or use BI and visualization tools such as Tableau to directly access the data on Redshift.
+The designed DWH is meant to be a single integrated source of truth for further dimensional tables. This architecture ensures data integrity and consistency; it also brings the advantage of coordinating data marts through the same ETL processes. As a result, the end user can design a set of dimensional tables on top of the normalized data, or use BI and visualization tools such as Tableau to directly access the data on Redshift.
 
 ## Datasets
 
