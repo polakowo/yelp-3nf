@@ -1,0 +1,45 @@
+- task_id: check_businesses_count
+  sql: SELECT COUNT(*) FROM businesses
+  pass_value: 196728
+- task_id: check_business_attributes_count
+  sql: SELECT COUNT(*) FROM business_attributes
+  pass_value: 192609
+- task_id: check_categories_count
+  sql: SELECT COUNT(*) FROM categories
+  pass_value: 1298
+- task_id: check_business_categories_count
+  sql: SELECT COUNT(*) FROM business_categories
+  pass_value: 788110
+- task_id: check_addresses_count
+  sql: SELECT COUNT(*) FROM addresses
+  pass_value: 178763
+- task_id: check_cities_count
+  sql: SELECT COUNT(*) FROM cities
+  pass_value: 1258
+- task_id: check_city_weather_count
+  sql: SELECT COUNT(*) FROM city_weather
+  pass_value: 15096
+- task_id: check_business_hours_count
+  sql: SELECT COUNT(*) FROM business_hours
+  pass_value: 192609
+- task_id: check_users_count
+  sql: SELECT COUNT(*) FROM users
+  pass_value: 1637138
+- task_id: check_elite_years_count
+  sql: SELECT COUNT(*) FROM elite_years
+  pass_value: 224499
+- task_id: check_friends_count
+  sql: SELECT COUNT(*) FROM friends
+  pass_value: 75531114
+- task_id: check_reviews_count
+  sql: SELECT COUNT(*) FROM reviews
+  pass_value: 6685900
+- task_id: check_checkins_count
+  sql: SELECT COUNT(*) FROM checkins
+  pass_value: 19089148
+- task_id: check_tips_count
+  sql: SELECT COUNT(*) FROM tips
+  pass_value: 1223094
+- task_id: check_photos_count
+  sql: SELECT COUNT(*) FROM photos
+  pass_value: 200000

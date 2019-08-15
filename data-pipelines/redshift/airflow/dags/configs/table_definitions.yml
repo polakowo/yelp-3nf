@@ -1,0 +1,546 @@
+# businesses
+- table_name: businesses
+  s3_key: businesses
+  copy_params: 
+    - FORMAT AS PARQUET
+  origin_schema:
+    - name: business_id
+      type: varchar(22)
+    - name: address_id
+      type: bigint
+    - name: is_open
+      type: boolean
+    - name: name
+      type: varchar(256)
+    - name: review_count
+      type: bigint
+    - name: stars
+      type: float
+  primary_key: business_id
+  foreign_key: 
+    - column_name: address_id
+      reftable: addresses
+      ref_column: address_id
+
+# business_attributes
+- table_name: business_attributes
+  s3_key: business_attributes
+  copy_params: 
+    - FORMAT AS PARQUET
+  origin_schema:
+    - name: business_id
+      type: varchar(22)
+    - name: AcceptsInsurance
+      type: boolean
+    - name: AgesAllowed
+      type: varchar(7)
+    - name: Alcohol
+      type: varchar(13)
+    - name: BYOB
+      type: boolean
+    - name: BYOBCorkage
+      type: varchar(11)
+    - name: BikeParking
+      type: boolean
+    - name: BusinessAcceptsBitcoin
+      type: boolean
+    - name: BusinessAcceptsCreditCards
+      type: boolean
+    - name: ByAppointmentOnly
+      type: boolean
+    - name: Caters
+      type: boolean
+    - name: CoatCheck
+      type: boolean
+    - name: Corkage
+      type: boolean
+    - name: DogsAllowed
+      type: boolean
+    - name: DriveThru
+      type: boolean
+    - name: GoodForDancing
+      type: boolean
+    - name: GoodForKids
+      type: boolean
+    - name: HappyHour
+      type: boolean
+    - name: HasTV
+      type: boolean
+    - name: NoiseLevel
+      type: varchar(9)
+    - name: Open24Hours
+      type: boolean
+    - name: OutdoorSeating
+      type: boolean
+    - name: RestaurantsAttire
+      type: varchar(6)
+    - name: RestaurantsCounterService
+      type: boolean
+    - name: RestaurantsDelivery
+      type: boolean
+    - name: RestaurantsGoodForGroups
+      type: boolean
+    - name: RestaurantsPriceRange2
+      type: integer
+    - name: RestaurantsReservations
+      type: boolean
+    - name: RestaurantsTableService
+      type: boolean
+    - name: RestaurantsTakeOut
+      type: boolean
+    - name: Smoking
+      type: varchar(7)
+    - name: WheelchairAccessible
+      type: boolean
+    - name: WiFi
+      type: varchar(4)
+    - name: Ambience_romantic
+      type: boolean
+    - name: Ambience_casual
+      type: boolean
+    - name: Ambience_trendy
+      type: boolean
+    - name: Ambience_intimate
+      type: boolean
+    - name: Ambience_hipster
+      type: boolean
+    - name: Ambience_upscale
+      type: boolean
+    - name: Ambience_divey
+      type: boolean
+    - name: Ambience_touristy
+      type: boolean
+    - name: Ambience_classy
+      type: boolean
+    - name: BestNights_sunday
+      type: boolean
+    - name: BestNights_thursday
+      type: boolean
+    - name: BestNights_monday
+      type: boolean
+    - name: BestNights_wednesday
+      type: boolean
+    - name: BestNights_saturday
+      type: boolean
+    - name: BestNights_friday
+      type: boolean
+    - name: BestNights_tuesday
+      type: boolean
+    - name: BusinessParking_valet
+      type: boolean
+    - name: BusinessParking_lot
+      type: boolean
+    - name: BusinessParking_validated
+      type: boolean
+    - name: BusinessParking_garage
+      type: boolean
+    - name: BusinessParking_street
+      type: boolean
+    - name: DietaryRestrictions_kosher
+      type: boolean
+    - name: DietaryRestrictions_dairy_free
+      type: boolean
+    - name: DietaryRestrictions_vegan
+      type: boolean
+    - name: DietaryRestrictions_vegetarian
+      type: boolean
+    - name: DietaryRestrictions_gluten_free
+      type: boolean
+    - name: DietaryRestrictions_soy_free
+      type: boolean
+    - name: DietaryRestrictions_halal
+      type: boolean
+    - name: GoodForMeal_lunch
+      type: boolean
+    - name: GoodForMeal_brunch
+      type: boolean
+    - name: GoodForMeal_dinner
+      type: boolean
+    - name: GoodForMeal_latenight
+      type: boolean
+    - name: GoodForMeal_dessert
+      type: boolean
+    - name: GoodForMeal_breakfast
+      type: boolean
+    - name: HairSpecializesIn_curly
+      type: boolean
+    - name: HairSpecializesIn_asian
+      type: boolean
+    - name: HairSpecializesIn_perms
+      type: boolean
+    - name: HairSpecializesIn_africanamerican
+      type: boolean
+    - name: HairSpecializesIn_straightperms
+      type: boolean
+    - name: HairSpecializesIn_kids
+      type: boolean
+    - name: HairSpecializesIn_coloring
+      type: boolean
+    - name: HairSpecializesIn_extensions
+      type: boolean
+    - name: Music_no_music
+      type: boolean
+    - name: Music_dj
+      type: boolean
+    - name: Music_live
+      type: boolean
+    - name: Music_karaoke
+      type: boolean
+    - name: Music_video
+      type: boolean
+    - name: Music_background_music
+      type: boolean
+    - name: Music_jukebox
+      type: boolean
+  primary_key: business_id
+  foreign_key: 
+    - column_name: business_id
+      reftable: businesses
+      ref_column: business_id
+
+# categories
+- table_name: categories
+  s3_key: categories
+  copy_params: 
+    - FORMAT AS PARQUET
+  origin_schema:
+    - name: category
+      type: varchar(35)
+    - name: category_id
+      type: bigint
+  primary_key: category_id
+
+# business_categories
+- table_name: business_categories
+  s3_key: business_categories
+  copy_params: 
+    - FORMAT AS PARQUET
+  origin_schema:
+    - name: business_id
+      type: varchar(22)
+    - name: category_id
+      type: bigint
+  primary_key: 
+    - business_id
+    - category_id
+  foreign_key: 
+    - column_name: business_id
+      reftable: businesses
+      ref_column: business_id
+    - column_name: category_id
+      reftable: categories
+      ref_column: category_id
+      
+# addresses
+- table_name: addresses
+  s3_key: addresses
+  copy_params: 
+    - FORMAT AS PARQUET
+  origin_schema:
+    - name: address
+      type: varchar(256)
+    - name: latitude
+      type: float
+    - name: longitude
+      type: float
+    - name: postal_code
+      type: varchar(8)
+    - name: city_id
+      type: bigint
+    - name: address_id
+      type: bigint
+  primary_key: address_id
+  foreign_key: 
+    - column_name: city_id
+      reftable: cities
+      ref_column: city_id
+
+# cities
+- table_name: cities
+  s3_key: cities
+  copy_params: 
+    - FORMAT AS PARQUET
+  origin_schema:
+    - name: city
+      type: varchar(50)
+    - name: state_code
+      type: varchar(3)
+    - name: average_household_size
+      type: float
+    - name: female_population
+      type: bigint
+    - name: foreign_born
+      type: bigint
+    - name: male_population
+      type: bigint
+    - name: median_age
+      type: float
+    - name: number_of_veterans
+      type: bigint
+    - name: state
+      type: varchar(14)
+    - name: total_population
+      type: bigint
+    - name: american_indian_and_alaska_native
+      type: bigint
+    - name: asian
+      type: bigint
+    - name: black_or_african_american
+      type: bigint
+    - name: hispanic_or_latino
+      type: bigint
+    - name: white
+      type: bigint
+    - name: city_id
+      type: bigint
+
+  primary_key: city_id
+
+# city_weather
+- table_name: city_weather
+  s3_key: city_weather
+  copy_params: 
+    - FORMAT AS PARQUET
+  origin_schema:
+    - name: date
+      type: date
+    - name: avg_temperature
+      type: float
+    - name: weather_description
+      type: varchar(23)
+    - name: city_id
+      type: bigint
+  primary_key: 
+    - city_id
+    - date
+  foreign_key: 
+    - column_name: city_id
+      reftable: cities
+      ref_column: city_id
+
+# business_hours
+- table_name: business_hours
+  s3_key: business_hours
+  copy_params: 
+    - FORMAT AS PARQUET
+  origin_schema:
+    - name: business_id
+      type: varchar(22)
+    - name: Monday_from
+      type: int
+    - name: Monday_to
+      type: int
+    - name: Tuesday_from
+      type: int
+    - name: Tuesday_to
+      type: int
+    - name: Wednesday_from
+      type: int
+    - name: Wednesday_to
+      type: int
+    - name: Thursday_from
+      type: int
+    - name: Thursday_to
+      type: int
+    - name: Friday_from
+      type: int
+    - name: Friday_to
+      type: int
+    - name: Saturday_from
+      type: int
+    - name: Saturday_to
+      type: int
+    - name: Sunday_from
+      type: int
+    - name: Sunday_to
+      type: int
+  primary_key: business_id
+  foreign_key: 
+    - column_name: business_id
+      reftable: businesses
+      ref_column: business_id
+
+# users
+- table_name: users
+  s3_key: users
+  copy_params: 
+    - FORMAT AS PARQUET
+  origin_schema:
+    - name: average_stars
+      type: float
+    - name: compliment_cool
+      type: bigint
+    - name: compliment_cute
+      type: bigint
+    - name: compliment_funny
+      type: bigint
+    - name: compliment_hot
+      type: bigint
+    - name: compliment_list
+      type: bigint
+    - name: compliment_more
+      type: bigint
+    - name: compliment_note
+      type: bigint
+    - name: compliment_photos
+      type: bigint
+    - name: compliment_plain
+      type: bigint
+    - name: compliment_profile
+      type: bigint
+    - name: compliment_writer
+      type: bigint
+    - name: cool
+      type: bigint
+    - name: fans
+      type: bigint
+    - name: funny
+      type: bigint
+    - name: name
+      type: varchar(256)
+    - name: review_count
+      type: bigint
+    - name: useful
+      type: bigint
+    - name: user_id
+      type: varchar(22)
+    - name: yelping_since
+      type: timestamp
+  primary_key: user_id
+
+# elite_years
+- table_name: elite_years
+  s3_key: elite_years
+  copy_params: 
+    - FORMAT AS PARQUET
+  origin_schema:
+    - name: user_id
+      type: varchar(22)
+    - name: year
+      type: int
+  primary_key:
+    - user_id
+    - year
+  foreign_key: 
+    - column_name: user_id
+      reftable: users
+      ref_column: user_id
+
+# friends
+- table_name: friends
+  s3_key: friends
+  copy_params: 
+    - FORMAT AS PARQUET
+  origin_schema:
+    - name: user_id
+      type: varchar(22)
+    - name: friend_id
+      type: varchar(22)
+  primary_key:
+    - user_id
+    - friend_id
+  foreign_key: 
+    - column_name: user_id
+      reftable: users
+      ref_column: user_id
+    - column_name: friend_id
+      reftable: users
+      ref_column: user_id
+
+# reviews
+- table_name: reviews
+  s3_key: reviews
+  copy_params: 
+    - FORMAT AS PARQUET
+  origin_schema:
+    - name: business_id
+      type: varchar(22)
+    - name: cool
+      type: bigint
+    - name: ts
+      type: timestamp
+    - name: funny
+      type: bigint
+    - name: review_id
+      type: varchar(22)
+    - name: stars
+      type: float
+    - name: text
+      type: varchar(20000)
+    - name: useful
+      type: bigint
+    - name: user_id
+      type: varchar(22)
+  primary_key: review_id
+  foreign_key: 
+    - column_name: business_id
+      reftable: businesses
+      ref_column: business_id
+    - column_name: user_id
+      reftable: users
+      ref_column: user_id
+
+# checkins
+- table_name: checkins
+  s3_key: checkins
+  copy_params: 
+    - FORMAT AS PARQUET
+  origin_schema:
+    - name: business_id
+      type: varchar(22)
+    - name: ts
+      type: timestamp
+  primary_key:
+    - business_id
+    - ts
+  foreign_key: 
+    - column_name: business_id
+      reftable: businesses
+      ref_column: business_id
+
+# tips
+- table_name: tips
+  s3_key: tips
+  copy_params: 
+    - FORMAT AS PARQUET
+  origin_schema:
+    - name: business_id
+      type: varchar(22)
+    - name: compliment_count
+      type: bigint
+    - name: ts
+      type: timestamp
+    - name: text
+      type: varchar(2000)
+    - name: user_id
+      type: varchar(22)
+    - name: tip_id
+      type: bigint
+  primary_key: tip_id
+  foreign_key: 
+    - column_name: business_id
+      reftable: businesses
+      ref_column: business_id
+    - column_name: user_id
+      reftable: users
+      ref_column: user_id
+
+# photos
+- table_name: photos
+  s3_key: photos
+  copy_params: 
+    - FORMAT AS PARQUET
+  origin_schema:
+    - name: business_id
+      type: varchar(22)
+    - name: caption
+      type: varchar(560)
+    - name: label
+      type: varchar(7)
+    - name: photo_id
+      type: varchar(22)
+  primary_key: photo_id
+  foreign_key: 
+    - column_name: business_id
+      reftable: businesses
+      ref_column: business_id

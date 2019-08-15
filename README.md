@@ -51,8 +51,6 @@ All three datasets will reside in a Amazon S3 bucket, which is the easiest and s
 
 Since the data is in JSON format and contains arrays and nested fields, it needs first to be transformed into a relational form. By design, Amazon Redshift does not support loading nested data (only Redshift Spectrum enables you to query complex data types such as struct, array, or map, without having to transform or load your data). To do this in a quick and scalable fashion, we will utilize Apache Spark. In particular, we will run an Amazon EMR (Elastic MapReduce) cluster, which uses Apache Spark and Hadoop to quickly & cost-effectively process and analyze vast amounts of data. The another advantage of Spark is the ability to control data quality, thus most of our tests will be done at this stage. With Spark, we will dynamically load JSON files from S3, process them, and store their normalized and enriched versions back into S3 in Parquet format.
 
-To configure Amazon EMR to run a PySpark job using Python 3.6, follow [these instructions](https://aws.amazon.com/premiumsupport/knowledge-center/emr-pyspark-python-3x/).
-
 ### Staging data
 
 <img width=100 src="images/amazon-s3-logo.png"/>
@@ -158,7 +156,7 @@ The following scenarios needs to be addressed:
 
 ## Installation
 
-### Datasets
+### Data preparation (Amazon S3)
 
 - Create an S3 bucket. 
     - Ensure that the bucket is in the same region as your Amazon EMR and Redshift clusters.
@@ -180,14 +178,29 @@ The following scenarios needs to be addressed:
     - Upload it to a separate folder (`demo_dataset`) on your S3 bucket.
 - Download the whole dataset from [Historical Hourly Weather Data 2012-2017](https://www.kaggle.com/selfishgene/historical-hourly-weather-data/downloads/historical-hourly-weather-data.zip)
     - Unzip and upload `city_attributes.csv`, `temperature.csv`, and `weather_description.csv` files to a separate folder (`weather_dataset`) on your S3 bucket.
+    
+### Amazon EMR
 
-#### Airflow
+- Configure and create your EMR cluster (with Apache Spark enabled)
+- To configure Amazon EMR to run a PySpark job using Python 3.6, follow [these instructions](https://aws.amazon.com/premiumsupport/knowledge-center/emr-pyspark-python-3x/)
+- Create a new notebook and execute cells defined in `interactive-yelp-etl.ipynb`
+
+### Amazon Redshift
+
+- Store your credentials and cluster creation parameters in `dwh.cfg`
+- Run `create_cluster.ipynb` to create a Redshift cluster.
+- Delete your Redshift cluster with `delete_cluster.ipynb` each time you're finished working.
+
+### Apache Airflow
 
 - Use [Quick Start](https://airflow.apache.org/start.html) to make a local Airflow instance up and running.
 - Copy `dags` and `plugins` folders to your Airflow work environment (under `AIRFLOW_HOME` path variable)
-- Create a new AWS connection `aws_credentials` by providing user credentials and ARN of the Redshift cluster.
+- Create a new AWS connection `aws_credentials` by providing user credentials and ARN role (from `dwh.cfg`)
+
 <img src="images/aws-connection.png"/>
-- Create a new Redshift connection `redshift` by providing database connection parameters.
+
+- Create a new Redshift connection `redshift` by providing database connection parameters (from `dwh.cfg`)
+
 <img src="images/redshift-connection.png"/>
 
 ## Further resources
