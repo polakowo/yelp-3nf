@@ -2,7 +2,7 @@
 
 ## Summary
 
-The aim of this project was to create a relational DWH for storing and querying Yelp data. 
+The purpose of this project is to create a DWH for storing and querying Yelp data. 
 
 The developed data pipeline translates the non-relational Yelp dataset distributed over JSON files in Amazon S3 bucket, into a 3NF-normalized dataset stored on Amazon Redshift. The resulting data model was designed to be a source of truth for further dimensional tables. Additionally, the data was enriched with demographics and weather data coming from third-party data sources. The entire process was done using Apache Spark and Amazon Redshift.
 
