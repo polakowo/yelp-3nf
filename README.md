@@ -2,13 +2,13 @@
 
 ## Summary
 
-The aim of this project was to create a relational DWH for storing and querying Yelp data. 
+The purpose of this project is to create a DWH for storing and querying Yelp data. 
 
-The developed data pipeline translates the non-relational Yelp dataset distributed over JSON files in Amazon S3 bucket, into a 3NF-normalized dataset stored on Amazon Redshift. The resulting data model was designed to be a source of truth for further dimensional tables. Additionally, the data was enriched with demographics and weather data coming from third-party data sources. The entire process was done using Apache Spark and Amazon Redshift.
+The developed data pipeline translates the non-relational Yelp dataset distributed over JSON files in Amazon S3 bucket, into a 3NF-normalized dataset stored on Amazon Redshift. The resulting data model was designed to be a source of truth for further dimensional tables. Additionally, the data was enriched with demographics and weather data coming from third-party data sources. The entire process was done using Apache Spark, Amazon Redshift and Apache Airflow.
 
 <img width=500 src="images/1*eeiD15Xwc_2Ul2DA5u_-Gw.png"/>
 
-The designed Amazon Redshift data warehouse follows the [Inmon's Corporate Information Factory (CIF)](https://www.techopedia.com/definition/28024/corporate-information-factory-cif) architecture: it builds upon the centralized corporate data repository (top-down design) which is 3NF normalized. This repository is our target artifact and is designed as a single integrated source of truth. Dimensional data marts can be then created from the DWH based on end user needs. This architecture ensures data integrity and consistency; it also brings the advantage of coordinating data marts through the same ETL processes. As a result, the end user can either create data marts on top of the designed central repository, design a set of dimensional tables for their analytics team to find valuable insights, or use BI and visualization tools such as Tableau to access the data on Redshift.
+The designed DWH is meant to be a single integrated source of truth for further dimensional tables. This architecture ensures data integrity and consistency; it also brings the advantage of coordinating data marts through the same ETL processes. As a result, the end user can design a set of dimensional tables on top of the normalized data, or use BI and visualization tools such as Tableau to directly access the data on Redshift.
 
 ## Datasets
 
@@ -25,7 +25,7 @@ To make the contribution unique, the Yelp dataset was enriched by demographics a
 
 ### Yelp Open Dataset
 
-The [Yelp Open Dataset](https://www.yelp.com/dataset) dataset is a subset of Yelp's businesses, reviews, and user data, available for academic use. The dataset (as of 13.08.2019) takes 9GB disk space (unzipped) and counts 6,685,900 reviews, 192,609 businesses over 10 metropolitan areas, over 1.2 million business attributes like hours, parking, availability, and ambience, 1,223,094 tips by 1,637,138 users, and aggregated check-ins over time. Each file is composed of a single object type, one JSON-object per-line. For more details on dataset structure, proceed to [Yelp Dataset JSON Documentation].
+The [Yelp Open Dataset](https://www.yelp.com/dataset) dataset is a subset of Yelp's businesses, reviews, and user data, available for academic use. The dataset (as of 13.08.2019) takes 9GB disk space (unzipped) and counts 6,685,900 reviews, 192,609 businesses over 10 metropolitan areas, over 1.2 million business attributes like hours, parking, availability, and ambience, 1,223,094 tips by 1,637,138 users, and aggregated check-ins over time. Each file is composed of a single object type, one JSON-object per-line. For more details on dataset structure, proceed to [Yelp Dataset JSON Documentation](https://www.yelp.com/dataset/documentation/main).
 
 ### U.S. City Demographic Data
 
