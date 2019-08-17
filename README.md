@@ -1,6 +1,6 @@
 # yelp-3nf
 
-The developed data pipeline translates the non-relational Yelp dataset distributed over JSON files in Amazon S3 bucket, into a 3NF-normalized dataset stored on Amazon Redshift. The resulting data model was designed to be a source of truth for further dimensional tables. Additionally, the data was enriched with demographics and weather data coming from third-party data sources. 
+The developed data pipeline translates the non-relational Yelp dataset distributed over JSON files in Amazon S3 bucket, into a 3NF-normalized dataset stored on Amazon Redshift. The designed architecture ensures data consistency and referential integrity across tables, and is meant to be the source of truth for further dimensional tables (star schema, olap cubes, etc.). Additionally, the data was enriched with demographics and weather data coming from third-party data sources. 
 
 The entire process was done using Apache Spark, Amazon Redshift and Apache Airflow.
 
