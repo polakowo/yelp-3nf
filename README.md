@@ -148,7 +148,7 @@ The whole data pipeline is divided into three subDAGs: the one that processes da
 
 This subDAG comprises of a set of tasks, each sending Spark script to an Amazon EMR cluster. For this, the [LivySparkOperator](https://github.com/rssanders3/airflow-spark-operator-plugin) is used. This operator facilitates interacting with the Livy Server on the EMR master node, which lets us send simple Scala or Python code over REST API calls instead of having to manage and deploy large JAR files. This helps because it scales data pipelines easily with multiple spark jobs running in parallel, rather than running them serially using EMR Step API. Each Spark script takes care of loading one or more source JSON files, transforming it into one or more (3NF-normalized) tables, and unloading them back into S3 in parquet format. The subDAG was partitioned logically by target tables, such that each script takes care of a small amount of work to simplify debugging. Note: in order to increase the performance, one might divide the tasks by the source tables and cache them.
 
-<img src="images/spark_jobs.png"/>
+<img width=600 src="images/spark_jobs.png"/>
 
 ### copy_to_redshift
 
@@ -241,7 +241,7 @@ The following scenarios needs to be addressed:
 
 <img src="images/redshift-connection.png"/>
 
-- In the Airflow UI, turn the DAG "main" on and manually run it. 
+- In the Airflow UI, turn on and manually run the DAG "main". 
 
 ## Further resources
 
