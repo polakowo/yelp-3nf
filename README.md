@@ -6,10 +6,6 @@ The purpose of this project is to create a DWH for storing and querying Yelp dat
 
 The developed data pipeline translates the non-relational Yelp dataset distributed over JSON files in Amazon S3 bucket, into a 3NF-normalized dataset stored on Amazon Redshift. The resulting data model was designed to be a source of truth for further dimensional tables. Additionally, the data was enriched with demographics and weather data coming from third-party data sources. The entire process was done using Apache Spark, Amazon Redshift and Apache Airflow.
 
-<img width=500 src="images/1*eeiD15Xwc_2Ul2DA5u_-Gw.png"/>
-
-The designed DWH is meant to be a single integrated source of truth for further dimensional tables. This architecture ensures data integrity and consistency; it also brings the advantage of coordinating data marts through the same ETL processes. As a result, the end user can design a set of dimensional tables on top of the normalized data, or use BI and visualization tools such as Tableau to directly access the data on Redshift.
-
 ## Datasets
 
 <img width=200 src="images/1200px-Yelp_Logo.svg.png"/>
