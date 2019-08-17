@@ -45,9 +45,9 @@ Note: fields such as *compliment_&ast;* are just placeholders for multiple field
 
 The model consists of 15 tables as a result of normalizing and joining 6 tables provided by Yelp, 1 table with demographic information and 2 tables with weather information. The schema is closer to a Snowflake schema as there are two fact tables - *reviews* and *tips* - and many dimensional tables with multiple levels of hierarchy and many-to-many relationships. Some tables keep their native keys, while for others monotonically increasing ids were generated. Rule of thumb: Use generated keys for entities and composite keys for relationships. Moreover, timestamps and dates were converted into Spark's native data types to be able to import them into Amazon Redshift in a correct format.
 
-For more details on tables and fields, visit [Yelp Dataset JSON](https://www.yelp.com/dataset/documentation/main) or  [table_definitions.yml](https://github.com/polakowo/yelp-3nf/blob/master/data-pipelines/redshift/airflow/dags/configs/table_definitions.yml)
+For more details on tables and fields, visit [Yelp Dataset JSON](https://www.yelp.com/dataset/documentation/main) or look at [Redshift table definitions](https://github.com/polakowo/yelp-3nf/blob/master/airflow/dags/configs/table_definitions.yml).
 
-To dive deeper into the data processing pipeline with Spark, visit [interactive-yelp-etl.ipynb](https://nbviewer.jupyter.org/github/polakowo/yelp-3nf/blob/master/data-pipelines/spark/interactive-yelp-etl.ipynb)
+To dive deeper into the data processing pipeline with Spark, here is [the provided Jupyter Notebook](https://nbviewer.jupyter.org/github/polakowo/yelp-3nf/blob/master/spark-jobs-playground.ipynb).
 
 #### *businesses*
 
@@ -104,6 +104,8 @@ Contains photo data including the caption and classification.
 
 ## Data pipeline
 
+The designed pipeline dynamically loads the JSON files from S3, processes them, and stores their normalized and enriched versions back into S3 in Parquet format. After this, Redshift takes over and copies the tables into a DWH.
+
 #### Load from S3
 
 <img width=100 src="images/amazon-s3-logo.png"/>
@@ -114,7 +116,7 @@ All three datasets reside in a Amazon S3 bucket, which is the easiest and safest
 
 <img width=100 src="images/1200px-Apache_Spark_Logo.svg.png"/>
 
-Since the data is in JSON format and contains arrays and nested fields, it needs first to be transformed into a relational form. By design, Amazon Redshift does not support loading nested data (only Redshift Spectrum enables you to query complex data types such as struct, array, or map, without having to transform or load your data). To do this in a quick and scalable fashion, Apache Spark is utilized. In particular, we can execute the entire pipeline in [a notebook](https://nbviewer.jupyter.org/github/polakowo/yelp-3nf/blob/master/data-pipelines/spark/interactive-yelp-etl.ipynb) an Amazon EMR (Elastic MapReduce) cluster, which uses Apache Spark and Hadoop to quickly & cost-effectively process and analyze vast amounts of data. The another advantage of Spark is the ability to control data quality, thus most of our data quality checks are done at this stage. The designed pipeline dynamically loads the JSON files from S3, processes them, and stores their normalized and enriched versions back into S3 in Parquet format.
+Since the data is in JSON format and contains arrays and nested fields, it needs first to be transformed into a relational form. By design, Amazon Redshift does not support loading nested data (only Redshift Spectrum enables you to query complex data types such as struct, array, or map, without having to transform or load your data). To do this in a quick and scalable fashion, Apache Spark is utilized. In particular, you can execute the entire data processing pipeline in [the provided ETL notebook](https://nbviewer.jupyter.org/github/polakowo/yelp-3nf/blob/master/spark-jobs-playground.ipynb) an Amazon EMR (Elastic MapReduce) cluster, which uses Apache Spark and Hadoop to quickly & cost-effectively process and analyze vast amounts of data. The another advantage of Spark is the ability to control data quality, thus most of our data quality checks are done at this stage.
 
 #### Unload to S3
 
@@ -136,7 +138,9 @@ Most data checks are done when transforming data with Spark. Furthermore, consis
 
 <img width=100 src="images/airflow-stack-220x234-613461a0bb1df0b065a5b69146fbe061.png"/>
 
-The following data processing pipeline is executed by using Apache Airflow, which is a tool for orchestrating complex computational workflows and data processing pipelines. The advantage of Airflow over Python ETL scripts is that it provides many add-on modules for operators that already exist from the community, such that one can build useful stuff quickly and in a modular fashion. Also, Airflow scheduler is designed to run as a persistent service in an Airflow production environment and is easier to manage than cron jobs. The whole data pipeline is divided into three subDAGs: the one that processes data with Spark (`spark_jobs`), the one that loads the data into Redshift (`copy_to_redshift`), and the one that checks the data for errors (`data_quality_checks`).
+The following data processing pipeline is executed by using Apache Airflow, which is a tool for orchestrating complex computational workflows and data processing pipelines. The advantage of Airflow over Python ETL scripts is that it provides many add-on modules for operators that already exist from the community, such that one can build useful stuff quickly and in a modular fashion. Also, Airflow scheduler is designed to run as a persistent service in an Airflow production environment and is easier to manage than cron jobs. 
+
+The whole data pipeline is divided into three subDAGs: the one that processes data with Spark (`spark_jobs`), the one that loads the data into Redshift (`copy_to_redshift`), and the one that checks the data for errors (`data_quality_checks`).
 
 <img width=500 src="images/main.png"/>
 
@@ -154,7 +158,7 @@ Airflow takes control of loading Parquet files into Redshift in right order and 
 
 ### data_quality_checks
 
-The data quality checks are executed with a custom [RedshiftCheckOperator](https://github.com/polakowo/yelp-3nf/blob/master/data-pipelines/redshift/airflow/plugins/redshift_plugin/operators/redshift_check_operator.py), which extends the Airflow's default [CheckOperator](https://github.com/apache/airflow/blob/master/airflow/operators/check_operator.py). It takes a SQL statement, the expected pass value, and optionally the tolerance of the result, and performs a simple value check.
+The data quality checks are executed with a custom [RedshiftCheckOperator](https://github.com/polakowo/yelp-3nf/blob/master/airflow/plugins/redshift_plugin/operators/redshift_check_operator.py), which extends the Airflow's default [CheckOperator](https://github.com/apache/airflow/blob/master/airflow/operators/check_operator.py). It takes a SQL statement, the expected pass value, and optionally the tolerance of the result, and performs a simple value check.
 
 ## Date updates
 
@@ -197,7 +201,7 @@ The following scenarios needs to be addressed:
 
 - Configure and create your EMR cluster (with Apache Spark enabled)
 - To configure Amazon EMR to run a PySpark job using Python 3.6, follow [these instructions](https://aws.amazon.com/premiumsupport/knowledge-center/emr-pyspark-python-3x/)
-- Create a new notebook and execute commands defined in [interactive-yelp-etl.ipynb](https://nbviewer.jupyter.org/github/polakowo/yelp-3nf/blob/master/data-pipelines/spark/interactive-yelp-etl.ipynb)
+- Create a new notebook and execute commands defined in [interactive-yelp-etl.ipynb](https://nbviewer.jupyter.org/github/polakowo/yelp-3nf/blob/master/spark-jobs-playground.ipynb)
 
 ### Amazon Redshift
 
