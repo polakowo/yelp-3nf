@@ -265,11 +265,19 @@
       type: varchar(50)
     - name: state_code
       type: varchar(3)
+    - name: american_indian_and_alaska_native
+      type: bigint
+    - name: asian
+      type: bigint
     - name: average_household_size
       type: float
+    - name: black_or_african_american
+      type: bigint
     - name: female_population
       type: bigint
     - name: foreign_born
+      type: bigint
+    - name: hispanic_or_latino
       type: bigint
     - name: male_population
       type: bigint
@@ -281,19 +289,10 @@
       type: varchar(14)
     - name: total_population
       type: bigint
-    - name: american_indian_and_alaska_native
-      type: bigint
-    - name: asian
-      type: bigint
-    - name: black_or_african_american
-      type: bigint
-    - name: hispanic_or_latino
-      type: bigint
     - name: white
       type: bigint
     - name: city_id
       type: bigint
-
   primary_key: city_id
 
 # city_weather

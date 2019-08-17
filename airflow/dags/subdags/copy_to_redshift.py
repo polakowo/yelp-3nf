@@ -1,7 +1,8 @@
 from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators import S3ToRedshiftOperator
 
-def s3_to_redshift_subdag(
+def copy_to_redshift_subdag(
     parent_dag_id,
     dag_id,
     table_definitions,
@@ -19,15 +20,18 @@ def s3_to_redshift_subdag(
         **kwargs
     )
 
+    start_operator = DummyOperator(dag=dag, task_id='start_operator')
+    end_operator = DummyOperator(dag=dag, task_id='end_operator')
+
     def get_table(table_name):
-        """Returns the table by its name"""
+        """Returns the table under the passed name"""
 
         for table in table_definitions:
             if table.get('table_name', None) == table_name:
                 return table
 
     def create_task(table):
-        """Returns the operator for copying the table into Redshift"""
+        """Returns an operator for copying the table into Redshift"""
         
         return S3ToRedshiftOperator(
             dag=dag,
@@ -64,25 +68,29 @@ def s3_to_redshift_subdag(
     # We could execute the entire YAML file in parallel
     # But let's respect the referential integrity
     # Look at the UML diagram to build the acyclic graph of references
+
+    start_operator >> cities
+    start_operator >> categories
+    start_operator >> users
     
     cities >> addresses
-    cities >> city_weather
+    cities >> city_weather >> end_operator
 
     addresses >> businesses
 
-    businesses >> business_attributes
-    businesses >> business_categories
-    businesses >> business_hours
-    businesses >> checkins
-    businesses >> photos
-    businesses >> tips
-    businesses >> reviews
+    businesses >> business_attributes >> end_operator
+    businesses >> business_categories >> end_operator
+    businesses >> business_hours >> end_operator
+    businesses >> checkins >> end_operator
+    businesses >> photos >> end_operator
+    businesses >> tips >> end_operator
+    businesses >> reviews >> end_operator
 
-    categories >> business_categories
+    categories >> business_categories >> end_operator
 
-    users >> reviews
-    users >> tips
-    users >> friends
-    users >> elite_years
+    users >> reviews >> end_operator
+    users >> tips >> end_operator
+    users >> friends >> end_operator
+    users >> elite_years >> end_operator
 
     return dag

@@ -1,5 +1,6 @@
 # from datetime import datetime, timedelta
 from airflow import DAG
+from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators import RedshiftValueCheckOperator
 
 
@@ -16,8 +17,11 @@ def data_quality_checks_subdag(
         **kwargs
     )
 
+    start_operator = DummyOperator(dag=dag, task_id='start_operator')
+    end_operator = DummyOperator(dag=dag, task_id='end_operator')
+
     for check in check_definitions:
-        RedshiftValueCheckOperator(
+        check_operator = RedshiftValueCheckOperator(
             dag=dag, 
             task_id=check.get('task_id', None), 
             redshift_conn_id="redshift",
@@ -25,5 +29,7 @@ def data_quality_checks_subdag(
             pass_value=check.get('pass_value', None),
             tolerance=check.get('tolerance', None)
         )
+
+        start_operator >> check_operator >> end_operator
 
     return dag
