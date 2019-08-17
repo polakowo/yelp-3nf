@@ -104,43 +104,57 @@ Contains photo data including the caption and classification.
 
 ## Data pipeline
 
-### Storing data
+#### Load from S3
 
 <img width=100 src="images/amazon-s3-logo.png"/>
 
 All three datasets reside in a Amazon S3 bucket, which is the easiest and safest option to store and retrieve any amount of data at any time from any other AWS service. 
 
-### Ingesting and processing data
+#### Process with Spark
 
 <img width=100 src="images/1200px-Apache_Spark_Logo.svg.png"/>
 
-Since the data is in JSON format and contains arrays and nested fields, it needs first to be transformed into a relational form. By design, Amazon Redshift does not support loading nested data (only Redshift Spectrum enables you to query complex data types such as struct, array, or map, without having to transform or load your data). To do this in a quick and scalable fashion, Apache Spark is utilized. In particular, we can run [a notebook](https://nbviewer.jupyter.org/github/polakowo/yelp-3nf/blob/master/data-pipelines/spark/interactive-yelp-etl.ipynb) an Amazon EMR (Elastic MapReduce) cluster, which uses Apache Spark and Hadoop to quickly & cost-effectively process and analyze vast amounts of data. The another advantage of Spark is the ability to control data quality, thus most of our data quality checks are done at this stage. The designed pipeline dynamically loads the JSON files from S3, processes them, and stores their normalized and enriched versions back into S3 in Parquet format.
+Since the data is in JSON format and contains arrays and nested fields, it needs first to be transformed into a relational form. By design, Amazon Redshift does not support loading nested data (only Redshift Spectrum enables you to query complex data types such as struct, array, or map, without having to transform or load your data). To do this in a quick and scalable fashion, Apache Spark is utilized. In particular, we can execute the entire pipeline in [a notebook](https://nbviewer.jupyter.org/github/polakowo/yelp-3nf/blob/master/data-pipelines/spark/interactive-yelp-etl.ipynb) an Amazon EMR (Elastic MapReduce) cluster, which uses Apache Spark and Hadoop to quickly & cost-effectively process and analyze vast amounts of data. The another advantage of Spark is the ability to control data quality, thus most of our data quality checks are done at this stage. The designed pipeline dynamically loads the JSON files from S3, processes them, and stores their normalized and enriched versions back into S3 in Parquet format.
 
-### Staging data
+#### Unload to S3
 
 <img width=100 src="images/amazon-s3-logo.png"/>
 
 Parquet stores nested data structures in a flat columnar format. Compared to a traditional approach where data is stored in row-oriented approach, parquet is more efficient in terms of storage and performance. Parquet files are well supported in the AWS ecosystem. Moreover, compared to JSON and CSV formats, we can store timestamp objects, datetime objects and long texts without any post-processing, and load them into Amazon Redshift as-is. From here, we can use an AWS Glue crawler to discover and register the schema for our datasets to be used in Amazon Athena. But our goal is materializing the data rather than querying directly from files on Amazon S3 - to be able to retrieve the data without prolonged load times. 
 
-### Loading data into DWH
+#### Load into Redshift
 
 <img width=150 src="images/aws-redshift-connector.png"/>
 
 To load the data from Parquet files into our Redshift DWH, we can rely on multiple options. The easiest one is by using [spark-redshift](https://github.com/databricks/spark-redshift): Spark reads the parquet files from S3 into the Spark cluster, converts the data to Avro format, writes it to S3, and finally issues a COPY SQL query to Redshift to load the data. Or we can have [an AWS Glue job that loads data into an Amazon Redshift](https://www.dbbest.com/blog/aws-glue-etl-service/). But instead, we should define the tables manually: that way we can control the quality and consistency of data, but also sortkeys, distkeys and compression. This solution issues SQL statements to Redshift to first CREATE the tables and then to COPY the data. To make the table definition process easier and more transparent, we can utilize the AWS Glue's data catalog to derive the correct data types (for example, should we use int or bigint?).
 
+#### Check data quality
+
+Most data checks are done when transforming data with Spark. Furthermore, consistency and referential integrity checks are done automatically by importing the data into Redshift (since data must adhere to table definition). To ensure that the output tables are of the right size, we also do some checks the end of the data pipeline.
+
+## Airflow DAGs
+
 <img width=100 src="images/airflow-stack-220x234-613461a0bb1df0b065a5b69146fbe061.png"/>
 
-The whole loading process can be easily executed by using Apache Airflow, which is a tool for orchestrating complex computational workflows and data processing pipelines. The advantage of Airflow over Python ETL scripts is that it provides many add-on modules for operators that already exist from the community, such that one can build useful stuff quickly and in a modular fashion. Also, Airflow scheduler is designed to run as a persistent service in an Airflow production environment (as opposed to cron jobs?). In our example, Airflow takes control of loading Parquet files into Redshift in right order and with consistency checks in place. 
+The following data processing pipeline is executed by using Apache Airflow, which is a tool for orchestrating complex computational workflows and data processing pipelines. The advantage of Airflow over Python ETL scripts is that it provides many add-on modules for operators that already exist from the community, such that one can build useful stuff quickly and in a modular fashion. Also, Airflow scheduler is designed to run as a persistent service in an Airflow production environment and is easier to manage than cron jobs. The whole data pipeline is divided into three subDAGs: the one that processes data with Spark (`spark_jobs`), the one that loads the data into Redshift (`copy_to_redshift`), and the one that checks the data for errors (`data_quality_checks`).
 
-The whole data loading pipeline is divided into two subDAGs: one that loads the data and one that checks the data.
+<img width=500 src="images/main.png"/>
 
-<img width=500 src="images/yelp-etl.png"/>
+### spark_jobs
 
-The loading operation is done with the [S3ToRedshiftOperator](https://github.com/airflow-plugins/redshift_plugin), provided by the Airflow community. This operator takes the table definition as a dictionary, creates the Redshift table from it and performs the COPY operation. All table definitions are stored in a YAML configuration file. The order and relationships between operators were derived based on the references between tables; for example, because *reviews* table references *businesses*, *businesses* have to be loaded first, otherwise, the referential integrity is violated (and you may get errors). Thus, data integrity and referential constraints are automatically enforced while populating the Redshift database.
+This subDAG comprises of a set of tasks, each sending Spark script to an Amazon EMR cluster. For this, the [LivySparkOperator](https://github.com/rssanders3/airflow-spark-operator-plugin) is used. This operator facilitates interacting with the Livy Server on the EMR master node, which lets us send simple Scala or Python code over REST API calls instead of having to manage and deploy large JAR files. This helps because it scales data pipelines easily with multiple spark jobs running in parallel, rather than running them serially using EMR Step API. Each Spark script takes care of loading one or more source JSON files, transforming it into one or more (3NF-normalized) tables, and unloading them back into S3 in parquet format. The subDAG was partitioned logically by target tables, such that each script takes care of a small amount of work to simplify debugging. Note: in order to increase the performance, one might divide the tasks by the source tables and cache them.
 
-<img src="images/s3_to_redshift.png"/>
+<img src="images/spark_jobs.png"/>
 
-Some data quality checks are already done when transforming data with Spark. More formal checks can be found at the end of the data pipeline. These checks are executed with a custom [RedshiftCheckOperator](https://github.com/polakowo/yelp-3nf/blob/master/data-pipelines/redshift/airflow/plugins/redshift_plugin/operators/redshift_check_operator.py), which extends the Airflow's default [CheckOperator](https://github.com/apache/airflow/blob/master/airflow/operators/check_operator.py). It takes a SQL statement, the expected pass value, and optionally the tolerance of the result, and performs a simple value check.
+### copy_to_redshift
+
+Airflow takes control of loading Parquet files into Redshift in right order and with consistency checks in place. The loading operation is done with the [S3ToRedshiftOperator](https://github.com/airflow-plugins/redshift_plugin), provided by the Airflow community. This operator takes the table definition as a dictionary, creates the Redshift table from it and performs the COPY operation. All table definitions are stored in a YAML configuration file. The order and relationships between operators were derived based on the references between tables; for example, because *reviews* table references *businesses*, *businesses* have to be loaded first, otherwise, the referential integrity is violated (and you may get errors). Thus, data integrity and referential constraints are automatically enforced while populating the Redshift database.
+
+<img src="images/copy_to_redshift.png"/>
+
+### data_quality_checks
+
+The data quality checks are executed with a custom [RedshiftCheckOperator](https://github.com/polakowo/yelp-3nf/blob/master/data-pipelines/redshift/airflow/plugins/redshift_plugin/operators/redshift_check_operator.py), which extends the Airflow's default [CheckOperator](https://github.com/apache/airflow/blob/master/airflow/operators/check_operator.py). It takes a SQL statement, the expected pass value, and optionally the tolerance of the result, and performs a simple value check.
 
 ## Date updates
 
