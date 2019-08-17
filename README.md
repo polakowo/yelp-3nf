@@ -200,10 +200,22 @@ The following scenarios needs to be addressed:
 ### Amazon EMR
 
 - Configure and create your EMR cluster.
-    - Enable Apache Spark and Livy.
+    - Go to advanced options, and enable Apache Spark, Livy and AWS Glue Data Catalog for Spark.
     - Enter the following configuration JSON to make Python 3 default:
 ```json
-[{"classification":"spark-env", "properties":{}, "configurations":[{"classification":"export", "properties":{"PYSPARK_PYTHON":"/usr/bin/python3"}, "configurations":[]}]},{"classification":"spark-hive-site", "properties":{"hive.metastore.client.factory.class":"com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"}, "configurations":[]}]
+[
+  {
+     "Classification": "spark-env",
+     "Configurations": [
+       {
+         "Classification": "export",
+         "Properties": {
+            "PYSPARK_PYTHON": "/usr/bin/python3"
+          }
+       }
+    ]
+  }
+]
 ```
 - Go to EC2 Security Groups, select your master node and enable inbound connections to 8998.
 
