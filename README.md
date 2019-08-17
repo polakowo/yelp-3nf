@@ -241,8 +241,11 @@ The following scenarios needs to be addressed:
 
 <img src="images/redshift-connection.png"/>
 
+- In the Airflow UI, turn the DAG "main" on and manually run it. 
+
 ## Further resources
 
-- [Documentation for Yelp Open Dataset](https://www.yelp.com/dataset/documentation/main)
 - [Yelp's Academic Dataset Examples](https://github.com/Yelp/dataset-examples)
 - [Spark Tips & Tricks](https://gist.github.com/dusenberrymw/30cebf98263fae206ea0ffd2cb155813)
+- [Use Pyspark with a Jupyter Notebook in an AWS EMR cluster](https://towardsdatascience.com/use-pyspark-with-a-jupyter-notebook-in-an-aws-emr-cluster-e5abc4cc9bdd)
+- [Real-world Python workloads on Spark: EMR clusters](https://becominghuman.ai/real-world-python-workloads-on-spark-emr-clusters-3c6bda1a1350)
