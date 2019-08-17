@@ -199,20 +199,28 @@ The following scenarios needs to be addressed:
     
 ### Amazon EMR
 
-- Configure and create your EMR cluster (with Apache Spark enabled)
-- To configure Amazon EMR to run a PySpark job using Python 3.6, follow [these instructions](https://aws.amazon.com/premiumsupport/knowledge-center/emr-pyspark-python-3x/)
-- Create a new notebook and execute commands defined in [interactive-yelp-etl.ipynb](https://nbviewer.jupyter.org/github/polakowo/yelp-3nf/blob/master/spark-jobs-playground.ipynb)
+- Configure and create your EMR cluster.
+    - Enable Apache Spark and Livy.
+    - Enter the following configuration JSON to make Python 3 default:
+```json
+[{"classification":"spark-env", "properties":{}, "configurations":[{"classification":"export", "properties":{"PYSPARK_PYTHON":"/usr/bin/python3"}, "configurations":[]}]},{"classification":"spark-hive-site", "properties":{"hive.metastore.client.factory.class":"com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"}, "configurations":[]}]
+```
+- Go to EC2 Security Groups, select your master node and enable inbound connections to 8998.
 
 ### Amazon Redshift
 
 - Store your credentials and cluster creation parameters in `dwh.cfg`
 - Run `create_cluster.ipynb` to create a Redshift cluster.
-- Delete your Redshift cluster with `delete_cluster.ipynb` each time you're finished working.
+- Note: Delete your Redshift cluster with `delete_cluster.ipynb` when you're finished working.
 
 ### Apache Airflow
 
 - Use [Quick Start](https://airflow.apache.org/start.html) to make a local Airflow instance up and running.
 - Copy `dags` and `plugins` folders to your Airflow work environment (under `AIRFLOW_HOME` path variable)
+- Create a new HTTP connection `livy_http_conn` by providing host and port of the Livy server.
+
+<img src="images/livy_http_connection.png"/>
+
 - Create a new AWS connection `aws_credentials` by providing user credentials and ARN role (from `dwh.cfg`)
 
 <img src="images/aws-connection.png"/>
